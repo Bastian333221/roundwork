@@ -46,19 +46,21 @@ window.ROUNDWORK_VIDEOS = (() => {
     ['Watch demonstration','Ver demostración'],
     ['Open original video','Abrir video original'],
     ['Stop video','Detener video'],
-    ['Offline movement backup','Guía visual sin conexión'],
+    ['Quick mechanics · illustrations','Mecánica rápida · ilustraciones'],
+    ['Video demonstration · more detail','Demostración en video · más detalle'],
+    ['Illustrations show key positions and stay available offline. Use the video for a fuller view of the movement.','Las ilustraciones muestran las posiciones clave y están disponibles sin conexión. Usa el video para ver el movimiento con más detalle.'],
     ['KEY POSITIONS','POSICIONES CLAVE'],
-    ['Videos need internet. Written steps and the movement backup stay available offline after the app is saved.','Los videos necesitan internet. Los pasos escritos y la guía visual siguen disponibles sin conexión después de guardar la app.'],
+    ['Videos need internet. Illustrations and written steps stay available offline after the app is saved.','Los videos necesitan internet. Las ilustraciones y los pasos escritos siguen disponibles sin conexión después de guardar la app.'],
     ['Tap the player’s play button. If it cannot load here, open the original video.','Pulsa el botón de reproducción del video. Si no carga aquí, abre el video original.'],
     ['Demonstrations show movement technique. Follow your session’s dose and ask a coach to check unfamiliar movements.','Las demostraciones muestran la técnica del movimiento. Sigue la dosis de tu sesión y pide a un entrenador que revise los movimientos que no conoces.'],
-    ['VIDEO GUIDES','GUÍAS EN VIDEO'],
+    ['ILLUSTRATIONS + VIDEOS','ILUSTRACIONES + VIDEOS'],
     ['Demonstration video directory','Directorio de videos de demostración'],
     ['Publisher-hosted videos were located on 6 October 2026. They demonstrate technique; they do not validate this workout or its effects on punch power. Video notes explain differences from the prescribed variation. Original audio and available captions are controlled by the publisher.','Los videos de sus editores se localizaron el 6 de octubre de 2026. Demuestran técnica; no validan este entrenamiento ni sus efectos sobre la potencia del golpe. Las notas explican diferencias respecto a la variante indicada. El audio original y los subtítulos disponibles dependen del editor.'],
-    ['Video needs internet. Use the written steps or offline movement backup.','El video necesita internet. Usa los pasos escritos o la guía visual sin conexión.'],
+    ['Video needs internet. Use the illustrations and written steps.','El video necesita internet. Usa las ilustraciones y los pasos escritos.'],
     ['Connect once to save the written steps and movement backups. Videos and external expert pages need internet. Offline availability depends on your browser retaining the app’s saved files.','Conéctate una vez para guardar los pasos escritos y las guías visuales. Los videos y las páginas externas necesitan internet. La disponibilidad sin conexión depende de que el navegador conserve los archivos de la app.'],
     ['The written steps and movement backups have been saved for offline use on this browser. Open the app once online on each phone. Videos and external expert pages need internet; browsers may clear saved files.','Los pasos escritos y las guías visuales se han guardado para usar sin conexión en este navegador. Abre la app una vez con internet en cada teléfono. Los videos y las páginas externas necesitan internet; los navegadores pueden borrar los archivos guardados.'],
     ['Offline saving is unavailable in this browser. The app works while online; videos and expert pages also need internet.','No se puede guardar sin conexión en este navegador. La app funciona con internet; los videos y las páginas externas también lo necesitan.'],
-    ['Every gym movement includes a video guide with written steps and an offline movement backup.','Cada movimiento del gimnasio incluye una guía en video con pasos escritos y una guía visual sin conexión.']
+    ['Every gym movement opens with illustrated mechanics and written steps. Expand the video demonstration for a fuller view.','Cada movimiento del gimnasio se abre con la mecánica ilustrada y pasos escritos. Abre la demostración en video para verlo con más detalle.']
   ].forEach(pair=>pairs.push(pair));
   window.ROUNDWORK_ADD_ES?.(pairs);
   return Object.freeze(videos);

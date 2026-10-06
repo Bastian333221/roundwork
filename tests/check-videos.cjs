@@ -18,21 +18,23 @@ ok(/let the ball settle and reset/.test(V.rotation.note),'Rotational throw must 
 ok(V.bikeIntervals.id===V.bike.id,'Bike intervals share setup, not prescriptions');
 ok(V.marchIntervals.id===V.easyMarch.id,'Marching variants share technique, not intensity');
 const original=fs.readFileSync(path.join(base,'app.js'),'utf8');
-const app=original.replace(/  render\(\);\s*\}\)\(\);\s*$/,'  window.videoTest={guide,loadVideo,videoSection,closeModal};\n})();');
+const app=original.replace(/  render\(\);\s*\}\)\(\);\s*$/,'  window.videoTest={guide,loadVideo,stopVideo,updateDemo,videoSection,closeModal};\n})();');
 vm.runInContext(app,context);const T=context.window.videoTest;
-for(const ex of D.exercises){T.guide(ex.id);const html=get('#modal-root').innerHTML;ok(html.includes('Offline movement backup'),'Offline backup '+ex.id);ok(!html.includes('<iframe'),'No third-party load before click '+ex.id);ok(!html.includes('ILLUSTRATED MOVEMENT'),'Video replaces primary diagram '+ex.id);if(V[ex.id].id)ok(html.includes(V[ex.id].url)&&html.includes('data-video="load"'),'Specific video link and player '+ex.id);}
-T.guide('sled');T.loadVideo();let html=get('#video-stage').innerHTML;
+for(const ex of D.exercises){T.guide(ex.id);const html=get('#modal-root').innerHTML;ok(html.includes('<section class="movement-preview"')&&html.includes('Quick mechanics · illustrations'),'Visible illustrations '+ex.id);ok(!html.includes('movement-backup'),'Illustrations never hidden in backup '+ex.id);ok(!html.includes('<iframe'),'No third-party load before click '+ex.id);ok(html.indexOf('id="demo-visual"')<html.indexOf('video-guide')||!V[ex.id].id,'Illustrations before optional video '+ex.id);if(V[ex.id].id)ok(html.includes('<details class="video-details" id="video-details">')&&!html.includes('id="video-details" open'),'Video initially collapsed '+ex.id);if(V[ex.id].id)ok(html.includes(V[ex.id].url)&&html.includes('data-video="load"'),'Specific video link and player '+ex.id);}
+T.guide('sled');T.updateDemo(1);ok(get('#demo-step').textContent==='FRAME 2 / 3','Illustration frame navigation');T.updateDemo(0);T.loadVideo();let html=get('#video-stage').innerHTML;
 ok(html.includes('youtube-nocookie.com/embed/'+V.sled.id),'Click loads correct clip');
 ok(html.includes('autoplay=0')&&html.includes('playsinline=1'),'User plays manually on phone');
 ok(html.includes('strict-origin-when-cross-origin'),'YouTube receives referrer identity');
 ok(html.includes('allowfullscreen'),'Fullscreen control');
+T.stopVideo();ok(get('#modal-root .video-guide').outerHTML.includes('data-video="load"')&&!get('#modal-root .video-guide').outerHTML.includes('<iframe'),'Stop removes player and restores optional video');ok(original.includes("if(!event.target.open)stopVideo()"),'Closing video stops hidden playback');
+for(const text of ['Quick mechanics · illustrations','Video demonstration · more detail','ILLUSTRATIONS + VIDEOS'])ok(I.translate(text,'es')!==text,'Bilingual dual-guide labels '+text);
 I.setLanguage('es');T.guide('ropes');T.loadVideo();ok(get('#video-stage').innerHTML.includes('hl=es&cc_lang_pref=es'),'Spanish player and caption preference');
 context.navigator.onLine=false;T.guide('row');get('#video-stage').innerHTML='not-loaded';T.loadVideo();ok(get('#video-stage').innerHTML==='not-loaded','Offline tap does not attempt playback');
 T.closeModal();ok(get('#modal-root').innerHTML==='','Closing removes the embedded player');
 ok(JSON.stringify(D)===unchanged,'Visual update must not change training doses or routine');
 const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');
 ok(index.indexOf('videos.js')<index.indexOf('i18n.js'),'Video translations load before translator');
-ok(sw.includes('videos.js?v=1.2.0')&&sw.includes('roundwork-v1.2.0'),'Video catalog cached with current app');
+ok(sw.includes('videos.js?v=1.2.1')&&sw.includes('roundwork-v1.2.1'),'Video catalog cached with current app');
 ok(!sw.includes('youtube.com')&&!sw.includes('youtube-nocookie.com'),'External videos never falsely cached for offline');
 ok(!original.includes('ILLUSTRATED GUIDES'),'Library advertises video guides');
 console.log(`${checks} video checks passed: all 31 guides, 29 video mappings, variants, Spanish, offline handling, on-demand loading and unchanged training data.`);
