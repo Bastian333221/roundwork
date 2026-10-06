@@ -2,6 +2,8 @@
 
 A visual boxing gym companion for Android and iPhone. Alternate unchanged lifting weeks with progressive boxing-focused gym weeks. Includes equipment choices and substitutes, illustrated exercise guides, session timers and local workout logs.
 
+Version 1.1.0 adds English/Español controls (saved per browser), bilingual exercise search and a dedicated Evidence/Fuentes section. It includes nine source summaries, publication metadata, original links, limitations, a workout-to-source map and an exercise-reference directory. Each exercise guide can open its relevant evidence block. Bibliographic titles remain in the original publication language; personal notes are never translated. Workout data and prescriptions are unchanged.
+
 ## Use
 
 Open https://bastian333221.github.io/roundwork/ in Safari on iPhone or Chrome on Android. Confirm your equipment in My gym, select your week/day, and set readiness and coaching intensity before training.
@@ -19,6 +21,8 @@ The diagrams are simplified guides, not a form assessment. Expert sources and tr
 ## Verification
 
 Content/program checks and browser checks covered progression, equipment substitutions, guide navigation, timers and narrow responsive layouts. Actual Android/iPhone hardware verification is still needed.
+
+Run `node tests/check-app.cjs` and `node tests/check-language.cjs` from this directory. Bilingual checks cover all guide fields, numeric dose preservation, diagram captions, evidence mappings, persistence and unchanged canonical training data. Browser verification covers language changes during a running timer and open guide, Spanish search, notes/log persistence and a 375px viewport. Source review: 6 October 2026; research summaries identify whether the abstract or public guidance was consulted. The exact app routine is a programming adaptation and has not been tested as a complete intervention.
 
 ## Development
 

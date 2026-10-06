@@ -6,19 +6,20 @@
   <meta name="theme-color" content="#eeeee6">
   <meta name="description" content="Your equipment-aware boxing training companion. Purposeful power, strength, conditioning, and visual exercise guides.">
   <title>ROUNDWORK — Your boxing companion</title>
-  <link rel="manifest" href="manifest.webmanifest?v=1.0.2">
+  <link rel="manifest" href="manifest.webmanifest?v=1.1.0">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Roundwork">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=1.1.0">
 </head>
 <body>
   <div class="app-shell">
     <header class="site-header">
       <a class="brand" href="#session" aria-label="Roundwork home"><span class="brand-mark" aria-hidden="true">R<span>↗</span></span><span>ROUNDWORK<small>BUILT BETWEEN ROUNDS</small></span></a>
       <div class="header-note"><span class="status-dot"></span> YOUR TRAINING, IN YOUR CORNER</div>
+      <div id="language-switch" class="language-switch" role="group" aria-label="App language" data-no-i18n><button type="button" data-language="en" lang="en" aria-pressed="true">English</button><button type="button" data-language="es" lang="es" aria-pressed="false">Español</button></div>
       <button class="icon-button" id="help-button" aria-label="About this training plan">?</button>
     </header>
     <nav class="main-nav" aria-label="Main navigation">
@@ -26,6 +27,7 @@
       <button data-tab="plan" class="nav-button"><span class="nav-symbol" aria-hidden="true">▦</span> The plan</button>
       <button data-tab="exercises" class="nav-button"><span class="nav-symbol" aria-hidden="true">◫</span> Exercises</button>
       <button data-tab="gym" class="nav-button"><span class="nav-symbol" aria-hidden="true">⌘</span> My gym <span id="gym-count" class="nav-badge"></span></button>
+      <button data-tab="sources" class="nav-button"><span class="nav-symbol" aria-hidden="true">≡</span> Evidence</button>
     </nav>
     <main id="main" tabindex="-1"></main>
     <footer class="site-footer"><span>ROUNDWORK <span class="footer-cross">×</span> QUALITY OVER EXHAUSTION</span><span id="save-status">Preferences & logs stay on this device.</span></footer>
@@ -38,9 +40,13 @@
   </aside>
   <div id="modal-root"></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="data.js"></script>
-  <script src="diagrams.js"></script>
-  <script src="app.js"></script>
-  <script src="mobile.js?v=1.0.2"></script>
+  <script src="data.js?v=1.1.0"></script>
+  <script src="es.js?v=1.1.0"></script>
+  <script src="es-ui.js?v=1.1.0"></script>
+  <script src="evidence.js?v=1.1.0"></script>
+  <script src="i18n.js?v=1.1.0"></script>
+  <script src="diagrams.js?v=1.1.0"></script>
+  <script src="app.js?v=1.1.0"></script>
+  <script src="mobile.js?v=1.1.0"></script>
 </body>
 </html>

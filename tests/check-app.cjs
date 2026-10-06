@@ -1,0 +1,24 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const base=__dirname+'/../';
+const noop=()=>{};const element={addEventListener:noop,classList:{add:noop,remove:noop,toggle:noop},setAttribute:noop,textContent:'',innerHTML:'',hidden:false};
+const window={scrollTo:noop};const context={window,document:{getElementById:()=>element,querySelector:()=>element,querySelectorAll:()=>[],addEventListener:noop},localStorage:{getItem:()=>null,setItem:noop},location:{hash:''},history:{replaceState:noop},setInterval:noop,clearInterval:noop,setTimeout:noop,clearTimeout:noop,console,URL,Date,Map,Set,navigator:{}};
+vm.createContext(context);
+vm.runInContext(fs.readFileSync(base+'data.js','utf8'),context);
+vm.runInContext(fs.readFileSync(base+'diagrams.js','utf8'),context);
+const app=fs.readFileSync(base+'app.js','utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/, '  window.test={getDose,resolveExercise,availability,setState:s=>{state={...baseState,...s}}};\n})();');
+assert(app.includes('window.test='),'Test hook inserted only in memory');vm.runInContext(app,context);
+const D=window.BOXING_DATA,T=window.test;let checks=0;
+const ok=(x,msg)=>{assert(x,msg);checks++};
+const map=new Map(D.exercises.map(e=>[e.id,e]));
+for(const e of D.exercises){ok(window.ExerciseDemo.types.includes(e.demo),'Missing diagram '+e.id);ok(e.steps.length===3,'Three steps '+e.id);e.equipment.forEach(x=>ok(D.equipment.some(g=>g.id===x),'Unknown gear'));e.alternatives.forEach(x=>ok(map.has(x),'Unknown substitute'));for(let f=0;f<3;f++){const svg=window.ExerciseDemo.render(e.demo,f);ok(svg.includes('<svg')&&!/NaN|undefined/.test(svg),'Valid diagram '+e.id)}}
+for(const d of D.days)for(const i of d.items)ok(map.has(i.exercise),'Known prescribed exercise');
+const sled=D.days[0].items.find(x=>x.exercise==='sled'),ropes=D.days[1].items.find(x=>x.exercise==='ropes');
+T.setState({week:2,coachLoad:'technical',readiness:'normal'});let v=T.getDose(sled,map.get('sled'));ok(v.sets===4&&v.reps==='15 metres'&&v.rest===120,'Intermediate sled starting dose');v=T.getDose(ropes,map.get('ropes'));ok(v.sets===6&&v.seconds===20&&v.rest===40,'Intermediate ropes starting dose');
+T.setState({week:6,coachLoad:'technical',readiness:'normal'});v=T.getDose(sled,map.get('sled'));ok(v.sets===5&&v.reps==='20 metres','Sled progression');v=T.getDose(ropes,map.get('ropes'));ok(v.sets===8&&v.seconds===20,'Rope progression');
+T.setState({week:2,coachLoad:'hard',readiness:'normal'});v=T.getDose(sled,map.get('sled'));ok(v.gated&&v.sets===2&&v.planned.sets===4,'Hard coaching reduces sled but retains planned dose');v=T.getDose(sled,map.get('stepup'));ok(v.reps==='6 each leg'&&v.seconds===null,'Substitute uses its own units, even in reduced mode');
+T.setState({week:2,coachLoad:'technical',readiness:'tired'});v=T.getDose(ropes,map.get('ropes'));ok(v.gated&&v.seconds===10,'Fatigue blocks hard rope intervals');
+T.setState({equipment:{ropes:'no',floor:'yes',bike:'yes'},swaps:{}});ok(T.resolveExercise('ropes').id==='bikeIntervals','Missing ropes resolves to available bike');
+T.setState({equipment:{sled:'no',sledLane:'no',step:'no',floor:'yes'},swaps:{}});ok(T.resolveExercise('sled').id==='splitSquat','No sled or step resolves to split squat');
+T.setState({equipment:{},swaps:{}});ok(T.availability(map.get('sled'))==='unknown','Unknown never assumed available');
+const manifest=JSON.parse(fs.readFileSync(base+'manifest.webmanifest'));ok(manifest.display==='standalone','Home-screen manifest');for(const x of manifest.icons)ok(fs.existsSync(base+x.src),'App icon exists');
+console.log(`${checks} checks passed: prescriptions, progression, recovery, substitutions, diagrams and mobile assets.`);
