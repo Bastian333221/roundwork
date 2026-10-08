@@ -1,4 +1,4 @@
-# ROUNDWORK 1.3.0
+# ROUNDWORK 1.3.1
 
 Per-day Rookie, Intermediate and Advanced choices plus 30, 45, 60, 75, 90, 105 and 120-minute budgets. The pure planner adapts exercise selection, sets, duration and rests after resolving equipment. Rookie uses simpler resistance work and easy familiarisation; experienced levels retain fully rested power and controlled strength work. Short sessions reduce volume, not rest. Longer budgets cap hard work and extend easy cardio up to level-specific limits; unused time is intentional. Estimates include warm-up, cooldown, every displayed rest and setup/transition allowances. Gym queues and unfamiliar movements can take longer. Stop work in time for cooldown.
 
