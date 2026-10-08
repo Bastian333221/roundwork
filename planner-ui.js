@@ -1,6 +1,7 @@
 /* Authored bilingual planning explanations and consulted primary sources. */
 (() => {
   const pairs=[
+    ['SOURCE REVIEW · 8 OCTOBER 2026','REVISIÓN DE FUENTES · 8 DE OCTUBRE DE 2026'],
     ['Today’s exercise list reflects your level, time, equipment and recovery.','La lista de ejercicios de hoy refleja tu nivel, tiempo, equipo y recuperación.'],
     ['Use the rest shown on your current session card.','Usa el descanso indicado en la tarjeta de tu sesión actual.'],
     ['Rookie','Principiante'],['Intermediate','Intermedio'],['Advanced','Avanzado'],
