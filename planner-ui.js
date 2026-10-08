@@ -1,6 +1,7 @@
 /* Authored bilingual planning explanations and consulted primary sources. */
 (() => {
   const pairs=[
+    ['Today’s exercise list reflects your level, time, equipment and recovery.','La lista de ejercicios de hoy refleja tu nivel, tiempo, equipo y recuperación.'],
     ['Use the rest shown on your current session card.','Usa el descanso indicado en la tarjeta de tu sesión actual.'],
     ['Rookie','Principiante'],['Intermediate','Intermedio'],['Advanced','Avanzado'],
     ['Choose this day’s session','Elige la sesión de este día'],['Saved for this week and day','Guardado para esta semana y día'],
