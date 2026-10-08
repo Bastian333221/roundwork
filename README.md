@@ -1,3 +1,9 @@
+# ROUNDWORK 1.3.0
+
+Per-day Rookie, Intermediate and Advanced choices plus 30, 45, 60, 75, 90, 105 and 120-minute budgets. The pure planner adapts exercise selection, sets, duration and rests after resolving equipment. Rookie uses simpler resistance work and easy familiarisation; experienced levels retain fully rested power and controlled strength work. Short sessions reduce volume, not rest. Longer budgets cap hard work and extend easy cardio up to level-specific limits; unused time is intentional. Estimates include warm-up, cooldown, every displayed rest and setup/transition allowances. Gym queues and unfamiliar movements can take longer. Stop work in time for cooldown.
+
+Coaching and recovery days are not converted into gym workouts. Existing lifting weeks remain unchanged. Readiness and coaching load override hard conditioning at every level. Later-week progression requires an explicit recovery/technique readiness choice. Day choices, dose snapshots and logs are local; export/import carries the new choices and accepts older backups. No automatic load increases, maximal lifting or all-out intervals. The rules are a conservative programming interpretation, not a clinically validated algorithm or a tournament taper. New planning evidence was consulted on 8 October 2026 and appears in Evidence/Fuentes.
+
 # ROUNDWORK
 
 A visual boxing gym companion for Android and iPhone. Alternate unchanged lifting weeks with progressive boxing-focused gym weeks. Includes equipment choices and substitutes, video exercise guides, session timers and local workout logs.
@@ -22,7 +28,7 @@ Demonstrations teach movement, not a form assessment or proof of boxing transfer
 
 Content/program checks and browser checks covered progression, equipment substitutions, guide navigation, timers and narrow responsive layouts. Actual Android/iPhone hardware verification is still needed.
 
-Run `node tests/check-app.cjs`, `node tests/check-language.cjs` and `node tests/check-videos.cjs` from this directory. Bilingual checks cover all guide fields, numeric dose preservation, diagram captions, evidence mappings, persistence and unchanged canonical training data. Browser verification covers language changes during a running timer and open guide, Spanish search, notes/log persistence and a 375px viewport. Source review: 6 October 2026; research summaries identify whether the abstract or public guidance was consulted. The exact app routine is a programming adaptation and has not been tested as a complete intervention.
+Run `node tests/check-app.cjs`, `node tests/check-language.cjs` and `node tests/check-videos.cjs` and `node tests/check-planner.cjs` from this directory. Bilingual checks cover all guide fields, numeric dose preservation, diagram captions, evidence mappings, persistence and unchanged canonical training data. Browser verification covers language changes during a running timer and open guide, Spanish search, notes/log persistence and a 375px viewport. Source review: 6 October 2026; research summaries identify whether the abstract or public guidance was consulted. The exact app routine is a programming adaptation and has not been tested as a complete intervention.
 
 ## Development
 
