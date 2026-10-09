@@ -132,5 +132,8 @@
   by('wallPushup').equipment=['pushWall','floor'];
   window.RoundworkChoices={groups,roles,trunkRoles,options,allowed,validSelection,prescription,pairs};
   L('Done','Hecho');
+  L('Equipment ready','Equipo disponible');
+  L('I have all the equipment listed above.','Tengo todo el equipo indicado arriba.');
+  L('Confirm the listed equipment on this card before training.','Confirma el equipo indicado en esta tarjeta antes de entrenar.');
   window.ROUNDWORK_CHOICES_TEXT=pairs.map(p=>p[0]);
 })();

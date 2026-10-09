@@ -112,13 +112,25 @@
     toast('Movement updated. Check its dose and guide.');
   }
 
+  function setEquipmentReady(original,confirmed) {
+    const item=currentSession().items.find(item=>item.exercise===original);
+    if(!item)return;
+    const equipment=exerciseFor(item)?.equipment || [];
+    if(!equipment.length)return;
+    equipment.forEach(id=>{state.equipment[id]=confirmed?'yes':'unknown';});
+    persist();render();$('#gear-ready-'+original)?.focus();
+  }
+  function equipmentConfirmation(item,ex) {
+    const needed=(ex.equipment || []).length>0;
+    return '<label class="equipment-confirmation"><input type="checkbox" id="gear-ready-'+esc(item.exercise)+'" data-equipment-ready="'+esc(item.exercise)+'" aria-label="Equipment ready: '+esc(ex.name)+'" '+(availability(ex)==='yes'?'checked ':'')+(needed?'':'disabled')+'><span><strong>Equipment ready</strong><small>'+(needed?'I have all the equipment listed above.':'No equipment needed')+'</small></span></label>';
+  }
   function setExerciseComplete(original,completed) {
     const item=currentSession().items.find(item=>item.exercise===original);
     if(!item)return;
     const ex=exerciseFor(item),key=logKey(state.day,original),dose=getDose(item,ex);
     if(completed&&!state.logs[key]){
       if(availability(ex)!=='yes'){
-        toast(availability(ex)==='unknown'?'Confirm this equipment in My gym before training.':'Equipment unavailable. Choose a substitute or skip this movement.');
+        toast(availability(ex)==='unknown'?'Confirm the listed equipment on this card before training.':'Equipment unavailable. Choose a substitute or skip this movement.');
         render();return;
       }
       if(dose.skip){toast('Hard conditioning is off. Leave this block unmarked.');render();return;}
@@ -170,7 +182,7 @@
     const equipment = (ex.equipment || []).map(id => `<span class="equipment-chip ${gearStatus(id)==='unknown'?'unknown':gearStatus(id)==='no'?'missing':''}">${esc(gearById.get(id)?.name || id)}${gearStatus(id)==='unknown'?' · confirm':gearStatus(id)==='no'?' · unavailable':''}</span>`).join('') || '<span class="equipment-chip">No equipment needed</span>';
     const restSeconds = parseDuration(dose.rest);
     const workSeconds = Number(dose.seconds) || 0;
-    return `<article class="exercise-card ${done?'completed':''}" data-original="${esc(item.exercise)}"><div class="card-top"><span class="exercise-number">${String(index+1).padStart(2,'0')}</span><div class="exercise-main">${categoryTag(ex.category)}<h3 class="exercise-name">${esc(ex.name)}</h3><p class="exercise-purpose">${esc(ex.purpose)}</p><div class="equipment-line">${equipment}</div></div><label class="completion-control ${done?'is-done':''}"><input type="checkbox" id="complete-${esc(item.exercise)}" data-complete="${esc(item.exercise)}" aria-label="${done?'Mark incomplete':'Mark complete'}: ${esc(ex.name)}" ${done?'checked':''}><span>Done</span></label></div>${previousDose?'<p class="exercise-note">Completed with an earlier prescription. Do not repeat this slot today.</p>':''}${substituted?`<p class="exercise-note substitute"><strong>Replaces ${esc(original.name)}.</strong> ${esc(ex.substitutionNote || original.substitutionNote || 'Same training slot; the movement and transfer differ. Follow the dose shown here.')}</p>`:''}<div class="dose-row"><div class="dose"><strong>${esc(dose.sets ?? '—')}</strong><small>SETS</small></div><div class="dose"><strong>${esc(dose.reps || (workSeconds?`${workSeconds} sec`:'As coached'))}</strong><small>${/min|sec/.test(String(dose.reps))?'DURATION':'REPETITIONS / DISTANCE'}</small></div><div class="dose"><strong>${esc(dose.rest ? dose.rest + ' sec' : '—')}</strong><small>REST</small></div></div>${dose.gated?`<p class="exercise-note"><strong>${dose.skip?'Skip hard conditioning.':'Easy practice only.'}</strong> ${state.readiness==='tired'?'Recovery mode is on.':state.coachLoad!=='technical'?'Coaching load is not confirmed light.':'Rookie uses easy equipment practice.'}</p>`:''}${note?`<p class="exercise-note">${esc(note)}</p>`:''}${available==='no'?`<p class="exercise-note"><strong>No suitable confirmed alternative.</strong> ${esc(ex.noEquipmentNote || 'Skip this exercise until suitable equipment is available. A different movement may not replace its training benefit.')}</p>`:''}<div class="card-actions">${movementSelect(item,ex,done)}${available==='unknown'?'<button class="text-button" data-go="gym">Confirm gear</button>':''}${restSeconds?`<button class="text-button" data-timer="${restSeconds}" data-timer-label="Rest · ${esc(ex.name)}">◷ Rest</button>`:''}${workSeconds&&!dose.skip?`<button class="text-button" data-timer="${workSeconds}" data-timer-label="Work · ${esc(ex.name)}">◷ Work</button>`:''}<button class="button button-dark" data-guide="${esc(ex.id)}">View guide <span aria-hidden="true">↗</span></button></div></article>`;
+    return `<article class="exercise-card ${done?'completed':''}" data-original="${esc(item.exercise)}"><div class="card-top"><span class="exercise-number">${String(index+1).padStart(2,'0')}</span><div class="exercise-main">${categoryTag(ex.category)}<h3 class="exercise-name">${esc(ex.name)}</h3><p class="exercise-purpose">${esc(ex.purpose)}</p><div class="equipment-line">${equipment}</div></div><label class="completion-control ${done?'is-done':''}"><input type="checkbox" id="complete-${esc(item.exercise)}" data-complete="${esc(item.exercise)}" aria-label="${done?'Mark incomplete':'Mark complete'}: ${esc(ex.name)}" ${done?'checked':''}><span>Done</span></label></div>${equipmentConfirmation(item,ex)}${previousDose?'<p class="exercise-note">Completed with an earlier prescription. Do not repeat this slot today.</p>':''}${substituted?`<p class="exercise-note substitute"><strong>Replaces ${esc(original.name)}.</strong> ${esc(ex.substitutionNote || original.substitutionNote || 'Same training slot; the movement and transfer differ. Follow the dose shown here.')}</p>`:''}<div class="dose-row"><div class="dose"><strong>${esc(dose.sets ?? '—')}</strong><small>SETS</small></div><div class="dose"><strong>${esc(dose.reps || (workSeconds?`${workSeconds} sec`:'As coached'))}</strong><small>${/min|sec/.test(String(dose.reps))?'DURATION':'REPETITIONS / DISTANCE'}</small></div><div class="dose"><strong>${esc(dose.rest ? dose.rest + ' sec' : '—')}</strong><small>REST</small></div></div>${dose.gated?`<p class="exercise-note"><strong>${dose.skip?'Skip hard conditioning.':'Easy practice only.'}</strong> ${state.readiness==='tired'?'Recovery mode is on.':state.coachLoad!=='technical'?'Coaching load is not confirmed light.':'Rookie uses easy equipment practice.'}</p>`:''}${note?`<p class="exercise-note">${esc(note)}</p>`:''}${available==='no'?`<p class="exercise-note"><strong>No suitable confirmed alternative.</strong> ${esc(ex.noEquipmentNote || 'Skip this exercise until suitable equipment is available. A different movement may not replace its training benefit.')}</p>`:''}<div class="card-actions">${movementSelect(item,ex,done)}${restSeconds?`<button class="text-button" data-timer="${restSeconds}" data-timer-label="Rest · ${esc(ex.name)}">◷ Rest</button>`:''}${workSeconds&&!dose.skip?`<button class="text-button" data-timer="${workSeconds}" data-timer-label="Work · ${esc(ex.name)}">◷ Work</button>`:''}<button class="button button-dark" data-guide="${esc(ex.id)}">View guide <span aria-hidden="true">↗</span></button></div></article>`;
   }
   function renderPlan() {
     const review = DATA.review || {summary:'A foundation programme for boxing, built around recovery and coached practice.',points:[]};
@@ -328,7 +340,8 @@
     else if(action==='save-session'){state.sessions[sessionKey()]={at:new Date().toISOString(),readiness:state.readiness,coachLoad:state.coachLoad,settings:sessionChoice(),prescription:currentSession().items.map(item=>({exercise:item.exercise,selected:exerciseFor(item).id,dose:getDose(item,exerciseFor(item))}))};persist();closeModal();render();toast('Session saved on this device.');}
   });
   document.addEventListener('change',event => {
-    if(event.target.dataset?.complete){setExerciseComplete(event.target.dataset.complete,event.target.checked);}
+    if(event.target.dataset?.equipmentReady){setEquipmentReady(event.target.dataset.equipmentReady,event.target.checked);}
+    else if(event.target.dataset?.complete){setExerciseComplete(event.target.dataset.complete,event.target.checked);}
     else if(event.target.dataset?.movement){chooseMovement(event.target.dataset.movement,event.target.value);$('#'+event.target.id)?.focus();}
     else if(['level-select','duration-select','progression-ready'].includes(event.target.id)){
       const choice=sessionChoice(),id=event.target.id;

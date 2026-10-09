@@ -34,7 +34,7 @@ for(const day of ['thu','sat'])for(const minutes of P.times){T.setState({week:2,
 for(const day of ['fri','sun']){T.setState({week:2,day,sessionSettings:{['2:'+day]:{level:'advanced',minutes:120}}});p=T.currentSession();ok(p.kind==='rest'&&p.minutes===0&&p.items[0].exercise==='rest','Two-hour choice preserves rest');}
 const clean=P.cleanSettings({'2:mon':{level:'unsafe',minutes:999,progressionReady:'true'},bad:{level:'advanced',minutes:120},'6:tue':{level:'rookie',minutes:45,progressionReady:true}});ok(Object.keys(clean).length===2&&clean['2:mon'].level==='intermediate'&&clean['2:mon'].minutes===105&&!clean['2:mon'].progressionReady,'Invalid settings safely normalised');ok(clean['6:tue'].minutes===45&&clean['6:tue'].level==='rookie','Valid backup choices retained');
 ok(JSON.stringify(D)===before,'Canonical routine never mutated');
-const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(index.indexOf('planner-ui.js')<index.indexOf('i18n.js'),'Planning translations load before translator');ok(sw.includes('planner.js?v=1.4.3')&&sw.includes('planner-ui.js?v=1.4.3'),'Adaptive code available offline');
+const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(index.indexOf('planner-ui.js')<index.indexOf('i18n.js'),'Planning translations load before translator');ok(sw.includes('planner.js?v=1.4.4')&&sw.includes('planner-ui.js?v=1.4.4'),'Adaptive code available offline');
 const mobile=fs.readFileSync(path.join(base,'mobile.js'),'utf8');ok(mobile.includes('cleanSettings(x.sessionSettings)'),'Import preserves sanitised day settings');
 for(const day of D.days){T.setState({week:2,day:day.id});T.renderSession();ok(get('main').innerHTML.includes('id="level-select"')&&get('main').innerHTML.includes('id="duration-select"'),'Both day menus rendered '+day.id);}
 T.setState({week:2,day:'mon',equipment:allYes,coachLoad:'technical'});events.change({target:{id:'duration-select',value:'45'}});events.change({target:{id:'level-select',value:'rookie'}});ok(T.currentSession().choice.level==='rookie'&&T.currentSession().choice.minutes===45,'Control events replan current day');ok(JSON.parse(saved['roundwork.v1']).sessionSettings['2:mon'].minutes===45,'Per-day choices persisted');
@@ -83,7 +83,7 @@ configured('mon','rookie');T.chooseMovement('warmup','warmRope');ok(T.currentSes
 configured('mon','intermediate',30,{swaps:{'2:mon:pallof':'birdDog'}});T.renderSession();ok(!get('main').innerHTML.includes('data-movement="pallof"'),'Omitted slot has no detached selector');ok(T.getState().swaps['2:mon:pallof']==='birdDog','Omitted choice stays saved');
 for(const [id,role] of Object.entries(C.trunkRoles)){ok(D.exercises.some(e=>e.id===id)&&role.length>0,'Known abdominal role '+id);}
 ok(JSON.stringify(D)===before,'Options never mutate routine or library after loading');
-ok(sw.includes('choices.js?v=1.4.3')&&sw.includes('choices-diagrams.js?v=1.4.3'),'New guides and selection code cached offline');
+ok(sw.includes('choices.js?v=1.4.4')&&sw.includes('choices-diagrams.js?v=1.4.4'),'New guides and selection code cached offline');
 console.log(checks+' full-app choice checks passed across '+plans+' baseline and '+optionPlans+' exercise-selection plans.');
 
 configured('mon','intermediate',120);T.renderSession();
@@ -108,7 +108,7 @@ ok(T.exerciseCard(T.currentSession().items[0],0).includes(' checked'),'Completed
 events.change({target:{id:'complete-warmup',dataset:{complete:'warmup'},checked:true}});
 ok(T.getState().logs['2:mon:warmup'].at===logged.at,'Checked event is idempotent');
 configured('tue','intermediate',120,{logs:{'2:mon:warmup':logged}});
-ok(!T.exerciseCard(T.currentSession().items[0],0).includes(' checked'),'Next day has independent checkbox');
+ok(!/id="complete-warmup"[^>]*checked/.test(T.exerciseCard(T.currentSession().items[0],0)),'Next day has independent checkbox');
 configured('mon','intermediate',120,{logs:{'2:mon:warmup':logged},swaps:{'2:mon:warmup':'warmRope'}});
 events.change({target:{id:'complete-warmup',dataset:{complete:'warmup'},checked:false}});
 ok(!T.getState().logs['2:mon:warmup'],'Uncheck reverses this day completion');
@@ -119,3 +119,30 @@ configured('mon','intermediate',120,{readiness:'tired'});
 events.change({target:{id:'complete-sled',dataset:{complete:'sled'},checked:true}});
 ok(!T.getState().logs['2:mon:sled'],'Skipped conditioning cannot be recorded as performed');
 console.log('Completion checkbox checks passed: selected exercise, dose, persistence, day isolation, uncheck and readiness.');
+
+configured('mon','intermediate',120,{equipment:{},swaps:{'2:mon:warmup':'warmRope'}});
+let gearItem=T.currentSession().items[0];
+ok(T.exerciseCard(gearItem,0).includes('data-equipment-ready="warmup"'),'Equipment checkbox rendered inside card');
+events.change({target:{id:'gear-ready-warmup',dataset:{equipmentReady:'warmup'},checked:true}});
+ok(T.getState().equipment.jumpRope==='yes'&&T.getState().equipment.floor==='yes','Confirms all gear for selected rope warmup');
+ok(!T.getState().equipment.bike,'Unrelated gear remains unconfirmed');
+ok(JSON.parse(saved['roundwork.v1']).equipment.jumpRope==='yes','Equipment confirmation persisted');
+ok(/id="gear-ready-warmup"[^>]*checked/.test(T.exerciseCard(T.currentSession().items[0],0)),'Confirmed equipment remains checked');
+events.change({target:{id:'complete-warmup',dataset:{complete:'warmup'},checked:true}});
+ok(T.getState().logs['2:mon:warmup']?.exercise==='warmRope','Equipment checkbox enables completion of selected exercise');
+const keptLog=T.getState().logs['2:mon:warmup'];
+events.change({target:{id:'gear-ready-warmup',dataset:{equipmentReady:'warmup'},checked:false}});
+ok(T.getState().equipment.jumpRope==='unknown'&&T.getState().equipment.floor==='unknown','Uncheck returns listed equipment to unconfirmed');
+ok(T.getState().logs['2:mon:warmup']===keptLog,'Equipment change preserves completed work');
+ok(!/id="gear-ready-warmup"[^>]*checked/.test(T.exerciseCard(T.currentSession().items[0],0)),'Unconfirmed gear checkbox is clear');
+configured('mon','intermediate',120,{equipment:{},swaps:{'2:mon:warmup':'warmRope'}});
+events.change({target:{id:'gear-ready-warmup',dataset:{equipmentReady:'warmup'},checked:true}});
+T.chooseMovement('warmup','warmBike');
+ok(!/id="gear-ready-warmup"[^>]*checked/.test(T.exerciseCard(T.currentSession().items[0],0)),'New movement requires its own missing gear');
+events.change({target:{id:'complete-warmup',dataset:{complete:'warmup'},checked:true}});
+ok(!T.getState().logs['2:mon:warmup'],'New movement cannot complete with previous movement gear');
+const cool=T.currentSession().items.find(x=>x.exercise==='cooldown');
+ok(/id="gear-ready-cooldown"[^>]*checked[^>]*disabled/.test(T.exerciseCard(cool,7)),'Equipment-free exercise is ready without confirmation');
+configured('mon','intermediate',120,{equipment:{floor:'yes',jumpRope:'yes'}});
+ok(/id="gear-ready-warmup"[^>]*checked/.test(T.exerciseCard({...T.currentSession().items[0],selectedExercise:D.exercises.find(x=>x.id==='warmRope')},0)),'Shared My gym gear is reflected in card');
+console.log('Equipment checkbox checks passed: selected gear, persistence, uncheck, shared status and completion guards.');

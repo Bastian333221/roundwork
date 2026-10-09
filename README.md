@@ -1,4 +1,4 @@
-# ROUNDWORK 1.4.3
+# ROUNDWORK 1.4.4
 
 Boxing gym sessions include a Choose movement dropdown inside every exercise card, beside its timers and guide, with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. A Done checkbox in each card saves its actual movement and dose in the selected week/day log. Uncheck to undo completion. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 
@@ -37,3 +37,5 @@ Run `node tests/check-app.cjs`, `node tests/check-language.cjs` and `node tests/
 ## Development
 
 Static HTML/CSS/JavaScript with no build dependencies. Serve this directory with a local HTTP server. All paths are relative for GitHub Pages hosting. Do not publish exported personal workout backups.
+
+Each exercise card has an Equipment ready checkbox. Check it to confirm all listed gear in My gym; shared equipment updates other cards too. Uncheck to return that gear to unconfirmed, without erasing completed work. Equipment-free exercises show a checked, disabled control.

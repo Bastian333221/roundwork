@@ -31,3 +31,11 @@
 .completion-control.is-done {background:#edf0df;border-color:var(--ink)}
 .completion-control:focus-within {outline:2px solid var(--orange);outline-offset:3px}
 @media(max-width:560px){.completion-control {gap:5px;padding:4px 6px;font-size:11px}}
+
+.equipment-confirmation {display:flex;align-items:center;gap:10px;min-height:48px;margin:14px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--paper,#fafaf6)}
+.equipment-confirmation input {width:22px;height:22px;margin:0;flex-shrink:0;accent-color:var(--ink);cursor:pointer}
+.equipment-confirmation strong {display:block;font-size:12px}
+.equipment-confirmation small {display:block;margin-top:3px;font-size:11px;line-height:1.5;color:var(--muted)}
+.equipment-confirmation:focus-within {outline:2px solid var(--orange);outline-offset:3px}
+.equipment-confirmation:has(input:checked) {background:#edf0df}
+.equipment-confirmation:has(input:disabled),.equipment-confirmation input:disabled {cursor:default}
