@@ -131,5 +131,6 @@
   by('cableRow').equipment=['cableRowStation'];
   by('wallPushup').equipment=['pushWall','floor'];
   window.RoundworkChoices={groups,roles,trunkRoles,options,allowed,validSelection,prescription,pairs};
+  L('Done','Hecho');
   window.ROUNDWORK_CHOICES_TEXT=pairs.map(p=>p[0]);
 })();

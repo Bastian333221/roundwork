@@ -4,7 +4,7 @@ const noop=()=>{},elements=new Map();const get=key=>{if(!elements.has(key))eleme
 const events={},saved={};const document={body:{style:{}},getElementById:get,querySelector:get,querySelectorAll:()=>[],addEventListener:(name,handler)=>events[name]=handler};
 const ctx={window:{scrollTo:noop},document,localStorage:{getItem:()=>null,setItem:(key,value)=>saved[key]=value},location:{hash:''},history:{replaceState:noop},setInterval:noop,clearInterval:noop,setTimeout:noop,clearTimeout:noop,console,URL,Date,Map,Set,navigator:{}};
 vm.createContext(ctx);for(const f of ['data.js','es.js','es-ui.js','evidence.js','videos.js','planner.js','planner-ui.js','choices.js'])vm.runInContext(fs.readFileSync(path.join(base,f),'utf8'),ctx);
-let app=fs.readFileSync(path.join(base,'app.js'),'utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/,'  window.test={getDose,currentSession,sessionOptions,exerciseCard,renderSession,movementMenu,chooseMovement,getState:()=>state,setState:s=>{state={...baseState,...s}}};\n})();');vm.runInContext(app,ctx);
+let app=fs.readFileSync(path.join(base,'app.js'),'utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/,'  window.test={getDose,currentSession,sessionOptions,exerciseCard,renderSession,movementSelect,chooseMovement,getState:()=>state,setState:s=>{state={...baseState,...s}}};\n})();');vm.runInContext(app,ctx);
 const D=ctx.window.BOXING_DATA,P=ctx.window.RoundworkPlanner,T=ctx.window.test,before=JSON.stringify(D);
 const allYes=Object.fromEntries(D.equipment.map(e=>[e.id,'yes']));
 const gearCases=[allYes,{},Object.fromEntries(D.equipment.map(e=>[e.id,'no'])),{floor:'yes',mat:'yes',bands:'yes',bandAnchor:'yes',ropes:'no',sled:'no',step:'no',dumbbells:'no',bench:'no',cable:'no',pulldown:'no',bike:'yes'}];
@@ -34,7 +34,7 @@ for(const day of ['thu','sat'])for(const minutes of P.times){T.setState({week:2,
 for(const day of ['fri','sun']){T.setState({week:2,day,sessionSettings:{['2:'+day]:{level:'advanced',minutes:120}}});p=T.currentSession();ok(p.kind==='rest'&&p.minutes===0&&p.items[0].exercise==='rest','Two-hour choice preserves rest');}
 const clean=P.cleanSettings({'2:mon':{level:'unsafe',minutes:999,progressionReady:'true'},bad:{level:'advanced',minutes:120},'6:tue':{level:'rookie',minutes:45,progressionReady:true}});ok(Object.keys(clean).length===2&&clean['2:mon'].level==='intermediate'&&clean['2:mon'].minutes===105&&!clean['2:mon'].progressionReady,'Invalid settings safely normalised');ok(clean['6:tue'].minutes===45&&clean['6:tue'].level==='rookie','Valid backup choices retained');
 ok(JSON.stringify(D)===before,'Canonical routine never mutated');
-const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(index.indexOf('planner-ui.js')<index.indexOf('i18n.js'),'Planning translations load before translator');ok(sw.includes('planner.js?v=1.4.2')&&sw.includes('planner-ui.js?v=1.4.2'),'Adaptive code available offline');
+const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(index.indexOf('planner-ui.js')<index.indexOf('i18n.js'),'Planning translations load before translator');ok(sw.includes('planner.js?v=1.4.3')&&sw.includes('planner-ui.js?v=1.4.3'),'Adaptive code available offline');
 const mobile=fs.readFileSync(path.join(base,'mobile.js'),'utf8');ok(mobile.includes('cleanSettings(x.sessionSettings)'),'Import preserves sanitised day settings');
 for(const day of D.days){T.setState({week:2,day:day.id});T.renderSession();ok(get('main').innerHTML.includes('id="level-select"')&&get('main').innerHTML.includes('id="duration-select"'),'Both day menus rendered '+day.id);}
 T.setState({week:2,day:'mon',equipment:allYes,coachLoad:'technical'});events.change({target:{id:'duration-select',value:'45'}});events.change({target:{id:'level-select',value:'rookie'}});ok(T.currentSession().choice.level==='rookie'&&T.currentSession().choice.minutes===45,'Control events replan current day');ok(JSON.parse(saved['roundwork.v1']).sessionSettings['2:mon'].minutes===45,'Per-day choices persisted');
@@ -75,13 +75,47 @@ function configured(day='wed',level='advanced',minutes=120,extra={}){T.setState(
 configured();T.chooseMovement('lunge','walkingBarbell');ok(T.getState().swaps['2:wed:lunge']==='walkingBarbell','Barbell choice saved');ok(JSON.parse(saved['roundwork.v1']).swaps['2:wed:lunge']==='walkingBarbell','Selection survives storage');
 configured('wed','rookie',120,{swaps:{'2:wed:lunge':'walkingBarbell'}});ok(!T.currentSession().items.some(i=>i.selectedExercise.id==='walkingBarbell'),'Level reduction invalidates barbell selection');
 configured('wed','advanced',120,{equipment:{...allYes,barbell:'no'},swaps:{'2:wed:lunge':'walkingBarbell'}});ok(!T.currentSession().items.some(i=>i.selectedExercise.id==='walkingBarbell'),'Missing barbell triggers fallback');
-configured('wed','advanced',120,{logs:{'2:wed:lunge':{selected:'lunge',dose:{sets:2}}}});const completed=JSON.stringify(T.getState().logs);T.chooseMovement('lunge','walkingBarbell');ok(!T.getState().swaps['2:wed:lunge']&&JSON.stringify(T.getState().logs)===completed,'Completed choices cannot erase logs');ok(T.movementMenu(T.currentSession()).includes('data-movement="lunge" disabled'),'Completed selection disabled');
+configured('wed','advanced',120,{logs:{'2:wed:lunge':{selected:'lunge',dose:{sets:2}}}});const completed=JSON.stringify(T.getState().logs);T.chooseMovement('lunge','walkingBarbell');ok(!T.getState().swaps['2:wed:lunge']&&JSON.stringify(T.getState().logs)===completed,'Completed choices cannot erase logs');ok(T.exerciseCard(T.currentSession().items.find(i=>i.exercise==='lunge'),0).includes('data-movement="lunge" aria-describedby="movement-lunge-help" disabled'),'Completed selection disabled');
 configured('mon','intermediate');T.chooseMovement('jump','rotation');ok(!T.getState().swaps['2:mon:jump'],'Duplicate choice rejected');
-configured('wed','intermediate');T.chooseMovement('sidePlank','suitcaseCarry');ok(T.movementMenu(T.currentSession()).includes('Resist lateral bending while walking'),'Specific abdominal role visible');
+configured('wed','intermediate');T.chooseMovement('sidePlank','suitcaseCarry');ok(T.exerciseCard(T.currentSession().items.find(i=>i.exercise==='sidePlank'),0).includes('Resist lateral bending while walking'),'Specific abdominal role visible');
 configured('wed','rookie');T.chooseMovement('sidePlank','frontPlank');ok(T.currentSession().items.some(i=>i.selectedExercise.id==='frontPlank'),'Explicit rookie core choice respected');
 configured('mon','rookie');T.chooseMovement('warmup','warmRope');ok(T.currentSession().items[0].selectedExercise.id==='warmRope','Rookie easy jump rope permitted');
-configured('mon','intermediate',30,{swaps:{'2:mon:pallof':'birdDog'}});ok(T.movementMenu(T.currentSession()).includes('Omitted for level, time or repeated movement.'),'Short-session omission explained');ok(T.getState().swaps['2:mon:pallof']==='birdDog','Omitted choice stays saved');
+configured('mon','intermediate',30,{swaps:{'2:mon:pallof':'birdDog'}});T.renderSession();ok(!get('main').innerHTML.includes('data-movement="pallof"'),'Omitted slot has no detached selector');ok(T.getState().swaps['2:mon:pallof']==='birdDog','Omitted choice stays saved');
 for(const [id,role] of Object.entries(C.trunkRoles)){ok(D.exercises.some(e=>e.id===id)&&role.length>0,'Known abdominal role '+id);}
 ok(JSON.stringify(D)===before,'Options never mutate routine or library after loading');
-ok(sw.includes('choices.js?v=1.4.2')&&sw.includes('choices-diagrams.js?v=1.4.2'),'New guides and selection code cached offline');
+ok(sw.includes('choices.js?v=1.4.3')&&sw.includes('choices-diagrams.js?v=1.4.3'),'New guides and selection code cached offline');
 console.log(checks+' full-app choice checks passed across '+plans+' baseline and '+optionPlans+' exercise-selection plans.');
+
+configured('mon','intermediate',120);T.renderSession();
+ok(!get('main').innerHTML.includes('movement-menu')&&!get('main').innerHTML.includes('Choose your exercises'),'Separate chooser section removed');
+for(const [index,item] of T.currentSession().items.entries()){
+  const card=T.exerciseCard(item,index);
+  ok(card.includes('data-movement="'+item.exercise+'"'),'Selector in each gym card '+item.exercise);
+  ok(card.indexOf('card-movement')>card.indexOf('card-actions'),'Selector alongside card controls '+item.exercise);
+  ok(!card.includes('data-swap='),'Redundant chooser button removed '+item.exercise);
+}
+events.change({target:{id:'movement-warmup',dataset:{movement:'warmup'},value:'warmRope'}});
+ok(T.currentSession().items[0].selectedExercise.id==='warmRope','Inline change event updates the plan');
+configured('thu');T.renderSession();ok(!get('main').innerHTML.includes('data-movement='),'Coaching card remains coach-led');
+console.log('Inline exercise-card selector checks passed.');
+
+configured('mon','intermediate',120);T.chooseMovement('warmup','warmRope');
+events.change({target:{id:'complete-warmup',dataset:{complete:'warmup'},checked:true}});
+const logged=T.getState().logs['2:mon:warmup'];
+ok(logged.exercise==='warmRope'&&logged.dose.seconds===480&&logged.settings.level==='intermediate','Checkbox logs actual selection and dose');
+ok(JSON.parse(saved['roundwork.v1']).logs['2:mon:warmup'].exercise==='warmRope','Checkbox persists day log');
+ok(T.exerciseCard(T.currentSession().items[0],0).includes(' checked'),'Completed checkbox remains checked after render');
+events.change({target:{id:'complete-warmup',dataset:{complete:'warmup'},checked:true}});
+ok(T.getState().logs['2:mon:warmup'].at===logged.at,'Checked event is idempotent');
+configured('tue','intermediate',120,{logs:{'2:mon:warmup':logged}});
+ok(!T.exerciseCard(T.currentSession().items[0],0).includes(' checked'),'Next day has independent checkbox');
+configured('mon','intermediate',120,{logs:{'2:mon:warmup':logged},swaps:{'2:mon:warmup':'warmRope'}});
+events.change({target:{id:'complete-warmup',dataset:{complete:'warmup'},checked:false}});
+ok(!T.getState().logs['2:mon:warmup'],'Uncheck reverses this day completion');
+configured('mon','intermediate',120,{equipment:{}});
+events.change({target:{id:'complete-warmup',dataset:{complete:'warmup'},checked:true}});
+ok(!T.getState().logs['2:mon:warmup'],'Equipment confirmation still required');
+configured('mon','intermediate',120,{readiness:'tired'});
+events.change({target:{id:'complete-sled',dataset:{complete:'sled'},checked:true}});
+ok(!T.getState().logs['2:mon:sled'],'Skipped conditioning cannot be recorded as performed');
+console.log('Completion checkbox checks passed: selected exercise, dose, persistence, day isolation, uncheck and readiness.');

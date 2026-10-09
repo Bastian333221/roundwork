@@ -1,6 +1,6 @@
-# ROUNDWORK 1.4.2
+# ROUNDWORK 1.4.3
 
-Boxing gym sessions include a Choose your exercises menu with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
+Boxing gym sessions include a Choose movement dropdown inside every exercise card, beside its timers and guide, with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. A Done checkbox in each card saves its actual movement and dose in the selected week/day log. Uncheck to undo completion. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 
 The library now has 52 illustrated guides, 50 on-demand video mappings and 16 evidence summaries. New options include easy jump-rope warm-ups, bodyweight/dumbbell/barbell walking lunges, seated cable rows and easy rowing. Barbell walking lunges require Advanced, familiar technique and a coach-checked rack/bar setup. Trunk options identify rotation control (Pallof press), extension control (dead bug/forearm plank), combined control (bird dog) and lateral support (side plank/suitcase carry). These roles and exercise alternatives are not identical stimuli or proof of greater punch force. Exact doses remain programming choices rather than experimentally validated prescriptions for this app.
 

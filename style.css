@@ -18,12 +18,16 @@
 .movement-preview h3{font-size:12px;margin:0 0 12px}.movement-preview>p{font-size:11px;line-height:1.65;color:var(--muted);margin:10px 0 16px}.video-details{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:16px 0}.video-details>summary{padding:16px 14px;min-height:48px;font-size:12px;font-weight:800;cursor:pointer}.video-details>summary:focus-visible{outline:3px solid var(--orange);outline-offset:-3px}.video-details[open]>summary{border-bottom:1px solid var(--line)}.video-details .video-guide{padding:12px}.video-details>#video-player-help{padding:0 12px 12px}.movement-preview .demo-controls{gap:6px}@media(max-width:560px){.movement-preview .demo-controls .button{padding:9px;min-width:36px;font-size:10px}}
 
 .session-options{padding:22px;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:20px 0}.session-options .section-heading{margin-bottom:18px;gap:12px}.session-option-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.session-options p,.adaptation-notes li{font-size:12px;line-height:1.7}.session-options .panel-select{width:100%;font-size:15px;min-height:48px}.session-options .form-label{font-size:10px}.progression-choice{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.6;margin:18px 0}.progression-choice input{width:20px;height:20px;flex-shrink:0;accent-color:var(--orange)}.plan-timing{padding:12px;background:#edf0df;border-radius:8px}.adaptation-notes>summary{font-size:12px;font-weight:800;cursor:pointer;min-height:44px;padding:12px 0}.adaptation-notes li{margin:10px 0}.adaptation-notes ul{padding-left:20px}@media(max-width:560px){.session-options{padding:16px}.session-options .section-heading{align-items:flex-start;flex-direction:column}.session-option-grid{gap:12px}.session-options .form-label{font-size:9px}.session-options .panel-select{font-size:14px}}
-/* Exercise selections stay readable and tappable on a gym phone. */
-.movement-menu {margin:18px 0;padding:18px;border:1px solid var(--line,#d9ded5);border-radius:14px;background:var(--paper,#f8f5ed)}
-.movement-menu summary {cursor:pointer;font-weight:750;min-height:44px;display:list-item;padding:10px 0}
-.movement-menu p {font-size:14px;line-height:1.6;max-width:75ch}
-.movement-slot {padding:16px 0;border-top:1px solid var(--line,#d9ded5);min-width:0}
-.movement-slot .panel-select {width:100%;max-width:100%;min-height:48px;margin-top:8px;text-overflow:ellipsis}
-.movement-slot-meta {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:8px}
-.movement-slot-meta .text-button {min-height:44px}
-.movement-slot .trunk-role {margin:8px 0 0;color:var(--green,#26392f);font-weight:650}
+/* Movement choices live beside each card's timers and guide. */
+.card-actions {flex-wrap:wrap;align-items:center}
+.card-movement {flex:1 1 260px;min-width:0;max-width:400px;margin-right:auto;text-align:left}
+.card-movement .form-label {display:block;margin:0 0 6px}
+.card-movement .panel-select {width:100%;min-height:48px;max-width:100%;font-size:14px;text-overflow:ellipsis}
+.movement-choice-meta {font-size:11px;line-height:1.5;color:var(--muted);margin:6px 0 0}
+@media(max-width:700px){.card-movement {flex-basis:100%;max-width:none;margin-right:0}.card-movement .panel-select {font-size:16px}.card-actions>.text-button {min-height:44px}}
+
+.completion-control {display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px;flex-shrink:0;cursor:pointer;border:1px solid var(--line);border-radius:8px;font-size:12px;font-weight:700}
+.completion-control input {width:22px;height:22px;margin:0;accent-color:var(--ink);cursor:pointer}
+.completion-control.is-done {background:#edf0df;border-color:var(--ink)}
+.completion-control:focus-within {outline:2px solid var(--orange);outline-offset:3px}
+@media(max-width:560px){.completion-control {gap:5px;padding:4px 6px;font-size:11px}}
