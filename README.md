@@ -1,4 +1,8 @@
-# ROUNDWORK 1.3.1
+# ROUNDWORK 1.4.0
+
+Boxing gym sessions include a Choose your exercises menu with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
+
+The library now has 52 illustrated guides, 50 on-demand video mappings and 16 evidence summaries. New options include easy jump-rope warm-ups, bodyweight/dumbbell/barbell walking lunges, seated cable rows and easy rowing. Barbell walking lunges require Advanced, familiar technique and a coach-checked rack/bar setup. Trunk options identify rotation control (Pallof press), extension control (dead bug/forearm plank), combined control (bird dog) and lateral support (side plank/suitcase carry). These roles and exercise alternatives are not identical stimuli or proof of greater punch force. Exact doses remain programming choices rather than experimentally validated prescriptions for this app.
 
 Per-day Rookie, Intermediate and Advanced choices plus 30, 45, 60, 75, 90, 105 and 120-minute budgets. The pure planner adapts exercise selection, sets, duration and rests after resolving equipment. Rookie uses simpler resistance work and easy familiarisation; experienced levels retain fully rested power and controlled strength work. Short sessions reduce volume, not rest. Longer budgets cap hard work and extend easy cardio up to level-specific limits; unused time is intentional. Estimates include warm-up, cooldown, every displayed rest and setup/transition allowances. Gym queues and unfamiliar movements can take longer. Stop work in time for cooldown.
 
@@ -28,7 +32,7 @@ Demonstrations teach movement, not a form assessment or proof of boxing transfer
 
 Content/program checks and browser checks covered progression, equipment substitutions, guide navigation, timers and narrow responsive layouts. Actual Android/iPhone hardware verification is still needed.
 
-Run `node tests/check-app.cjs`, `node tests/check-language.cjs` and `node tests/check-videos.cjs` and `node tests/check-planner.cjs` from this directory. Bilingual checks cover all guide fields, numeric dose preservation, diagram captions, evidence mappings, persistence and unchanged canonical training data. Browser verification covers language changes during a running timer and open guide, Spanish search, notes/log persistence and a 375px viewport. Source review: 6 October 2026; research summaries identify whether the abstract or public guidance was consulted. The exact app routine is a programming adaptation and has not been tested as a complete intervention.
+Run `node tests/check-app.cjs`, `node tests/check-language.cjs` and `node tests/check-videos.cjs` and `node tests/check-planner.cjs` plus `node tests/check-choices.cjs` from this directory. Bilingual checks cover all guide fields, numeric dose preservation, diagram captions, evidence mappings, persistence and unchanged canonical training data. Browser verification covers language changes during a running timer and open guide, Spanish search, notes/log persistence and a 375px viewport. Source review: 6 October 2026; research summaries identify whether the abstract or public guidance was consulted. The exact app routine is a programming adaptation and has not been tested as a complete intervention.
 
 ## Development
 

@@ -48,7 +48,7 @@ window.RoundworkPlanner = (() => {
       if(rookie){
         const bandsReady=['bands','bandAnchor','floor'].every(id=>context.equipment?.[id]==='yes');
         const simpler={squat:'splitSquat',press:'pushup',hinge:'bridge',lunge:'splitSquat',pallof:'deadbug',sidePlank:'deadbug',row:bandsReady?'bandRow':null}[item.exercise];
-        if(simpler){ex=exerciseById(simpler);d={...doseFor(item,ex)};}
+        if(simpler&&!window.RoundworkChoices?.validSelection(item.exercise,context.swaps?.[`${context.week}:${day.id}:${item.exercise}`],level)){ex=exerciseById(simpler);d={...doseFor(item,ex)};}
       }
       if(item.exercise==='warmup'){d={...d,sets:1,seconds:480,reps:'8 minutes',rest:0};}
       else if(item.exercise==='cooldown'){d={...d,sets:1,seconds:180,reps:'3 minutes',rest:0};}
@@ -61,7 +61,7 @@ window.RoundworkPlanner = (() => {
           d.rest=advanced?180:120;
           if(rookie){d.reps=/each (side|leg)/.test(d.reps)?'6 each side':ex.id==='bridge'?'10 reps':'8 reps';d.seconds=null;}
           d.notes=rookie?'Use an easy, controlled load or bodyweight. Leave at least 4 good repetitions in reserve.':advanced?'Use a familiar load; leave 2–3 good repetitions in reserve. No grinding or automatic weight increase.':'Use a familiar load; leave 3 good repetitions in reserve. No grinding or automatic weight increase.';
-        }else{d.sets=2;d.rest=60;if(rookie){d.reps='6 each side';d.seconds=null;}else if(ex.id==='sidePlank')d.reps=`${d.seconds} seconds each side`;d.notes='Move slowly and breathe normally. Stop before position deteriorates.';}
+        }else{d.sets=2;d.rest=60;if(['sidePlank','kneeSidePlank','frontPlank','suitcaseCarry'].includes(ex.id)){d.seconds=rookie?15:advanced?25:20;d.reps=ex.id==='frontPlank'?`${d.seconds} seconds`:`${d.seconds} seconds each side`;}else{d.reps=rookie?'6 each side':'8 each side';d.seconds=null;}d.notes='Move slowly and breathe normally. Stop before position deteriorates.';}
         if(tired)d.sets=Math.max(1,d.sets-1);
       }else if(item.exercise==='shadow'){
         d={...d,sets:tired?2:rookie?2:advanced?4:3,seconds:rookie?60:120,reps:rookie?'1-minute round':'2-minute round',rest:60,notes:'Relaxed coach-taught footwork and combinations. Keep balance; this is technique practice, not a maximal punching circuit.'};
@@ -82,10 +82,11 @@ window.RoundworkPlanner = (() => {
         if(tired){d.skip=true;d.gated=true;d.notes='Skip this conditioning slot when tired. Recover for coached boxing.';}
       }
       if(rookie&&item.exercise==='sidePlank'&&items.some(x=>x.selectedExercise.id==='deadbug'))continue;
+      if(items.some(x=>x.selectedExercise.id===ex.id)){removed.push(item.exercise);continue;}
       d.planned={...d};
       add(item,ex,d);
     }
-    if(rookie&&day.id!=='tue'){
+    if(rookie&&day.id!=='tue'&&!items.some(x=>x.exercise==='shadow')){
       const ex=exerciseById('shadow');
       items.splice(1,0,{exercise:'shadow',selectedExercise:ex,adaptedDose:{sets:2,reps:'1-minute round',seconds:60,rest:60,notes:'Relaxed coach-taught stance and footwork; keep balance.',skip:false,gated:false}});
     }

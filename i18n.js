@@ -29,6 +29,7 @@
       [/^(\d+(?:[–-]\d+)?) (?:reps|controlled reps|quick reps)$/,(_,n)=>`${n} ${value.includes('controlled')?'repeticiones controladas':value.includes('quick')?'repeticiones rápidas':'repeticiones'}`],
       [/^(\d+(?:[–-]\d+)?) each (side|leg)$/,(_,n,part)=>`${n} por ${part==='side'?'lado':'pierna'}`],
       [/^(\d+(?:[–-]\d+)?) seconds each side$/,(_,n)=>`${n} segundos por lado`],
+      [/^(\d+(?:[–-]\d+)?) seconds$/,(_,n)=>`${n} segundos`],
       [/^(\d+(?:[–-]\d+)?) (minutes|metres|seconds work|sec|min easy)$/,(_,n,unit)=>`${n} ${{minutes:'minutos',metres:'metros','seconds work':'segundos de trabajo',sec:'s','min easy':'min suaves'}[unit]}`],
       [/^(\d+)-minute round$/,(_,n)=>`Asalto de ${n} minutos`],
       [/^(\d+) metres · easy load$/,(_,n)=>`${n} metros · carga suave`],

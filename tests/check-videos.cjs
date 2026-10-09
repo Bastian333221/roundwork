@@ -5,11 +5,11 @@ const el=()=>({addEventListener:()=>{},classList:{add:()=>{},remove:()=>{},toggl
 const elements=new Map(), get=s=>{if(!elements.has(s))elements.set(s,el());return elements.get(s)};
 const document={getElementById:s=>get('#'+s),querySelector:get,querySelectorAll:()=>[],body:{style:{},querySelectorAll:()=>[]},documentElement:{},createTreeWalker:()=>({nextNode:()=>null}),addEventListener:()=>{},dispatchEvent:()=>{}};
 const context={window:{scrollTo:()=>{}},document,localStorage:{getItem:()=>null,setItem:()=>{}},NodeFilter:{SHOW_TEXT:4},MutationObserver:class{observe(){}},CustomEvent:class{},location:{hash:''},history:{replaceState:()=>{}},setInterval:()=>{},clearInterval:()=>{},setTimeout:()=>{},clearTimeout:()=>{},console,URL,Date,Map,Set,navigator:{onLine:true}};vm.createContext(context);
-for(const file of ['data.js','es.js','es-ui.js','evidence.js','videos.js','i18n.js','diagrams.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),context);
+for(const file of ['data.js','es.js','es-ui.js','evidence.js','videos.js','choices.js','i18n.js','diagrams.js','choices-diagrams.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),context);
 const {BOXING_DATA:D,ROUNDWORK_VIDEOS:V,RoundworkI18n:I}=context.window;
 const unchanged=JSON.stringify(D);
 for(const ex of D.exercises){const v=V[ex.id];ok(v,'Missing demonstration '+ex.id);ok(!!v.note,'Missing variant note '+ex.id);ok(I.translate(v.note,'es')!==v.note,'Spanish note '+ex.id);if(v.id){ok(/^[A-Za-z0-9_-]{11}$/.test(v.id),'Invalid video id '+ex.id);ok(v.url==='https://www.youtube.com/watch?v='+v.id,'Direct original link '+ex.id);ok(v.provider && v.title,'Missing attribution '+ex.id);ok(I.translate(v.title,'es')!==v.title,'Spanish title '+ex.id);}else ok(['coach','rest'].includes(ex.id)&&v.context,'Only non-exercise sessions omit video');}
-ok(Object.values(V).filter(v=>v.id).length===29,'29 movement guides with videos');
+ok(Object.values(V).filter(v=>v.id).length===D.exercises.length-2,'29 movement guides with videos');
 ok(V.sled.id==='E6mhG8zzYEY'&&/high-handle/.test(V.sled.note),'High-handle sled variant');
 ok(V.ropes.id==='ZujykKeVZpM'&&/alternating vertical waves/.test(V.ropes.note),'Ordinary anchored alternating waves');
 ok(/keep hands planted/.test(V.fastPushup.note),'Incline power slot keeps hands planted');
@@ -34,7 +34,7 @@ T.closeModal();ok(get('#modal-root').innerHTML==='','Closing removes the embedde
 ok(JSON.stringify(D)===unchanged,'Visual update must not change training doses or routine');
 const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');
 ok(index.indexOf('videos.js')<index.indexOf('i18n.js'),'Video translations load before translator');
-ok(sw.includes('videos.js?v=1.3.1')&&sw.includes('roundwork-v1.3.1'),'Video catalog cached with current app');
+ok(sw.includes('videos.js?v=1.4.0')&&sw.includes('roundwork-v1.4.0'),'Video catalog cached with current app');
 ok(!sw.includes('youtube.com')&&!sw.includes('youtube-nocookie.com'),'External videos never falsely cached for offline');
 ok(!original.includes('ILLUSTRATED GUIDES'),'Library advertises video guides');
-console.log(`${checks} video checks passed: all 31 guides, 29 video mappings, variants, Spanish, offline handling, on-demand loading and unchanged training data.`);
+console.log(`${checks} video checks passed: all ${D.exercises.length} guides, ${D.exercises.length-2} video mappings, variants, Spanish, offline handling, on-demand loading and unchanged training data.`);
