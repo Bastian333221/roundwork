@@ -111,7 +111,10 @@
     if(!C?.validSelection(original,id,sessionChoice().level)||availability(exById.get(id))==='no')return;
     if(state.logs[logKey(state.day,original)]){toast('Completed slot is locked.');return;}
     if(currentSession().items.some(x=>x.exercise!==original&&x.selectedExercise.id===id)){toast('Already in this session');return;}
-    state.swaps[logKey(state.day,original)]=id;persist();closeModal();render();toast('Movement updated. Check its dose and guide.');
+    const menuOpen=$('.movement-menu details')?.open;
+    state.swaps[logKey(state.day,original)]=id;persist();closeModal();render();
+    if(menuOpen&&$('.movement-menu details'))$('.movement-menu details').open=true;
+    toast('Movement updated. Check its dose and guide.');
   }
 
   function categoryClass(category) { const c = String(category).toLowerCase(); return /power|explosive/.test(c) ? 'power' : /strength|resistance/.test(c) ? 'strength' : /conditioning|aerobic|cardio/.test(c) ? 'conditioning' : 'technique'; }

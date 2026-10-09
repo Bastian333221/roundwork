@@ -127,6 +127,8 @@
   by('cableRow').avoid=[L('Do not lean back to move the handle or let the stack slam.','No te inclines hacia atrás para mover el agarre ni dejes caer los discos de la máquina.')];
   by('cableRow').doseOverride.notes=L('Controlled horizontal pulling; it differs from a vertical pulldown.','Tracción horizontal controlada; difiere de un jalón vertical.');
   D.equipment.push({id:'pushWall',name:L('Solid wall for wall push-ups','Pared sólida para flexiones')});
+  D.equipment.push({id:'cableRowStation',name:L('Seated cable-row station with foot supports','Estación de remo sentado en polea con apoyos de pies')});
+  by('cableRow').equipment=['cableRowStation'];
   by('wallPushup').equipment=['pushWall','floor'];
   window.RoundworkChoices={groups,roles,trunkRoles,options,allowed,validSelection,prescription,pairs};
   window.ROUNDWORK_CHOICES_TEXT=pairs.map(p=>p[0]);
