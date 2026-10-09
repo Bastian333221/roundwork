@@ -122,6 +122,10 @@
   V.suitcaseCarry=video('pm0snKjqXrI','IFAST · Zach Moore','Suitcase-carry mechanics','Mecánica del paseo con carga a un lado','The coach demonstrates a kettlebell. Use the light dumbbell in your guide and the displayed time on each side; do not copy heavy loads or the publisher’s distances.','El entrenador muestra una pesa rusa. Usa la mancuerna ligera de tu guía y el tiempo mostrado por lado; no copies cargas pesadas ni distancias del editor.');
   V.easyRower=video('4zWu1yuJ0_g','Concept2','Rowing stroke sequence','Secuencia de la remada','Learn the leg, hip and arm sequence. Keep this slot easy and conversational; do not copy racing pace or extra intervals.','Aprende la secuencia de piernas, caderas y brazos. Mantén este bloque suave y a ritmo de conversación; no copies ritmo de competición ni intervalos adicionales.');
   by('techFootwork').demo='footwork';by('techDefense').demo='defence';
+  by('bodyHinge').steps[0]=L('Brace gently with hands resting on your hips; keep knees softly bent.','Estabiliza suavemente con manos en las caderas; mantén rodillas ligeramente flexionadas.');
+  by('cableRow').cues=[L('Use a load you can pull without rocking your torso.','Usa una carga que puedas tirar sin balancear el tronco.')];
+  by('cableRow').avoid=[L('Do not lean back to move the handle or let the stack slam.','No te inclines hacia atrás para mover el agarre ni dejes caer los discos de la máquina.')];
+  by('cableRow').doseOverride.notes=L('Controlled horizontal pulling; it differs from a vertical pulldown.','Tracción horizontal controlada; difiere de un jalón vertical.');
   D.equipment.push({id:'pushWall',name:L('Solid wall for wall push-ups','Pared sólida para flexiones')});
   by('wallPushup').equipment=['pushWall','floor'];
   window.RoundworkChoices={groups,roles,trunkRoles,options,allowed,validSelection,prescription,pairs};
