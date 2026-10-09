@@ -39,3 +39,18 @@
 .equipment-confirmation:focus-within {outline:2px solid var(--orange);outline-offset:3px}
 .equipment-confirmation:has(input:checked) {background:#edf0df}
 .equipment-confirmation:has(input:disabled),.equipment-confirmation input:disabled {cursor:default}
+
+.card-equipment-panel {margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.card-equipment-panel .equipment-confirmation {margin:0;border:0;border-radius:0}
+.equipment-checklist {border-top:1px solid var(--line)}
+.equipment-checklist summary {display:flex;align-items:center;gap:10px;padding:12px;min-height:44px;cursor:pointer;font-size:12px;font-weight:700;list-style:none}
+.equipment-checklist summary::-webkit-details-marker {display:none}
+.equipment-checklist summary::before {content:'▸';font-size:14px}
+.equipment-checklist[open] summary::before {content:'▾'}
+.equipment-checklist summary:focus-visible {outline:2px solid var(--orange);outline-offset:-3px}
+.equipment-check-count {margin-left:auto;color:var(--muted);font-weight:400}
+.equipment-check-items {padding:0 12px 10px}
+.equipment-check-items p {margin:0 0 6px;font-size:11px;color:var(--muted);line-height:1.5}
+.equipment-check-item {display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-size:12px;line-height:1.5}
+.equipment-check-item input {width:22px;height:22px;margin:0;flex-shrink:0;accent-color:var(--ink);cursor:pointer}
+.equipment-check-item:focus-within {outline:2px solid var(--orange);outline-offset:2px}

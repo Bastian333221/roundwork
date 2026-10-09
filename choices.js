@@ -130,9 +130,26 @@
   D.equipment.push({id:'cableRowStation',name:L('Seated cable-row station with foot supports','Estación de remo sentado en polea con apoyos de pies')});
   by('cableRow').equipment=['cableRowStation'];
   by('wallPushup').equipment=['pushWall','floor'];
-  window.RoundworkChoices={groups,roles,trunkRoles,options,allowed,validSelection,prescription,pairs};
+  function cleanEquipmentChecks(value) {
+    const out={};
+    if(!value || typeof value!=='object' || Array.isArray(value))return out;
+    for(const [key,record] of Object.entries(value)){
+      if(!/^[1-8]:(mon|tue|wed|thu|fri|sat|sun):[a-zA-Z]+$/.test(key)||!record||typeof record!=='object')continue;
+      const ex=options(key.split(':')[2]).find(ex=>ex.id===record.exercise);
+      if(!ex || !record.items || typeof record.items!=='object' || Array.isArray(record.items))continue;
+      const items={};
+      for(const id of ex.equipment || [])if(typeof record.items[id]==='boolean')items[id]=record.items[id];
+      out[key]={exercise:ex.id,items};
+    }
+    return out;
+  }
+  window.RoundworkChoices={groups,roles,trunkRoles,options,allowed,validSelection,prescription,pairs,cleanEquipmentChecks};
   L('Done','Hecho');
   L('Equipment ready','Equipo disponible');
+  L('Confirm for this exercise only.','Confirma solo para este ejercicio.');
+  L('Equipment checklist','Lista de equipo');
+  L('Select the items available for this exercise.','Selecciona los elementos disponibles para este ejercicio.');
+  L('Equipment','Equipo');
   L('I have all the equipment listed above.','Tengo todo el equipo indicado arriba.');
   L('Confirm the listed equipment on this card before training.','Confirma el equipo indicado en esta tarjeta antes de entrenar.');
   window.ROUNDWORK_CHOICES_TEXT=pairs.map(p=>p[0]);

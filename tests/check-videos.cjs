@@ -34,7 +34,7 @@ T.closeModal();ok(get('#modal-root').innerHTML==='','Closing removes the embedde
 ok(JSON.stringify(D)===unchanged,'Visual update must not change training doses or routine');
 const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');
 ok(index.indexOf('videos.js')<index.indexOf('i18n.js'),'Video translations load before translator');
-ok(sw.includes('videos.js?v=1.4.4')&&sw.includes('roundwork-v1.4.4'),'Video catalog cached with current app');
+ok(sw.includes('videos.js?v=1.4.5')&&sw.includes('roundwork-v1.4.5'),'Video catalog cached with current app');
 ok(!sw.includes('youtube.com')&&!sw.includes('youtube-nocookie.com'),'External videos never falsely cached for offline');
 ok(!original.includes('ILLUSTRATED GUIDES'),'Library advertises video guides');
 console.log(`${checks} video checks passed: all ${D.exercises.length} guides, ${D.exercises.length-2} video mappings, variants, Spanish, offline handling, on-demand loading and unchanged training data.`);

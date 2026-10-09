@@ -9,7 +9,7 @@
   const exById = new Map((DATA.exercises || []).map(e => [e.id,e]));
   const gearById = new Map((DATA.equipment || []).map(e => [e.id,e]));
   const days = DATA.days || [];
-  const baseState = {week:2,day:days[0]?.id || 'monday',equipment:{},coachLoad:'unknown',readiness:'normal',notes:'',logs:{},sessions:{},swaps:{},sessionSettings:{}};
+  const baseState = {week:2,day:days[0]?.id || 'monday',equipment:{},coachLoad:'unknown',readiness:'normal',notes:'',logs:{},sessions:{},swaps:{},sessionSettings:{},equipmentChecks:{}};
   let state = {...baseState};
   let storageWorks = true;
   try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (saved && typeof saved === 'object') state = {...baseState,...saved}; }
@@ -21,6 +21,7 @@
   if (!['normal','tired'].includes(state.readiness)) state.readiness = 'normal';
   if (typeof state.notes !== 'string') state.notes = '';
   state.sessionSettings=window.RoundworkPlanner?.cleanSettings(state.sessionSettings)||{};
+  state.equipmentChecks=window.RoundworkChoices.cleanEquipmentChecks(state.equipmentChecks);
   let activeTab = ['session','plan','exercises','gym','sources'].includes(location.hash.slice(1)) ? location.hash.slice(1) : location.hash.startsWith('#source-')?'sources':'session';
   let librarySearch = '', libraryCategory = 'all', modal = null, demoInterval = null, lastFocus = null;
   let toastTimeout;
@@ -33,10 +34,21 @@
   function updateSaveStatus() { $('#save-status').textContent = storageWorks ? 'Preferences & logs stay on this device.' : 'Storage unavailable. Changes last only while this page is open.'; }
   function toast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => el.classList.remove('show'),3300); }
   function gearStatus(id) { return ['yes','no'].includes(state.equipment[id]) ? state.equipment[id] : 'unknown'; }
-  function availability(ex) {
+  function cardGearStatus(original,ex,id) {
+    const record=state.equipmentChecks[logKey(state.day,original)];
+    if(record?.exercise===ex.id && Object.hasOwn(record.items,id))return record.items[id]?'yes':'unknown';
+    return gearStatus(id);
+  }
+  function cardGearChecked(original,ex,id) {
+    const record=state.equipmentChecks[logKey(state.day,original)];
+    return record?.exercise===ex.id && record.items[id]===true;
+  }
+  function cardGearReady(original,ex) {return (ex.equipment || []).every(id=>cardGearChecked(original,ex,id));}
+  function availability(ex,original) {
     const equipment = ex.equipment || [];
-    if (equipment.some(id => gearStatus(id) === 'no')) return 'no';
-    if (equipment.some(id => gearStatus(id) === 'unknown')) return 'unknown';
+    const status=id=>original?cardGearStatus(original,ex,id):gearStatus(id);
+    if (equipment.some(id => status(id) === 'no')) return 'no';
+    if (equipment.some(id => status(id) === 'unknown')) return 'unknown';
     return 'yes';
   }
   function equipmentNames(ex) { return (ex.equipment || []).map(id => gearById.get(id)?.name || id); }
@@ -50,10 +62,10 @@
     const manual = state.swaps[logKey(state.day,original)];
     if (manual) {
       const selected = candidates.find(e => e.id === manual);
-      if (selected && availability(selected) !== 'no') return selected;
+      if (selected && availability(selected,original) !== 'no') return selected;
     }
-    if (candidates.some(ex=>ex.id===originalEx.id) && availability(originalEx) !== 'no') return originalEx;
-    return candidates.find(e => availability(e) === 'yes') || candidates.find(e => availability(e) === 'unknown') || originalEx;
+    if (candidates.some(ex=>ex.id===originalEx.id) && availability(originalEx,original) !== 'no') return originalEx;
+    return candidates.find(e => availability(e,original) === 'yes') || candidates.find(e => availability(e,original) === 'unknown') || originalEx;
   }
   function getDose(item,ex,options={}) {
     if(item.adaptedDose)return item.adaptedDose;
@@ -98,16 +110,17 @@
     const plan=currentSession(),others=plan.items.filter(x=>x.exercise!==item.exercise).map(x=>x.selectedExercise.id);
     const id='movement-'+item.exercise;
     return '<div class="card-movement"><label class="form-label" for="'+esc(id)+'">Choose movement</label><select class="panel-select" id="'+esc(id)+'" data-movement="'+esc(item.exercise)+'" aria-describedby="'+esc(id)+'-help" '+(done?'disabled':'')+'>'+C.options(item.exercise).map(ex=>{
-      const status=!C.allowed(ex,plan.choice.level)?'Different level':availability(ex)==='no'?'Unavailable':others.includes(ex.id)?'Already in this session':availability(ex)==='unknown'?'Confirm gear':'Available';
+      const status=!C.allowed(ex,plan.choice.level)?'Different level':availability(ex,item.exercise)==='no'?'Unavailable':others.includes(ex.id)?'Already in this session':availability(ex,item.exercise)==='unknown'?'Confirm gear':'Available';
       const blocked=['Different level','Unavailable','Already in this session'].includes(status);
       return '<option value="'+esc(ex.id)+'" '+(selected.id===ex.id?'selected ':'')+(blocked?'disabled':'')+'>'+esc(ex.name)+' · '+status+'</option>';
     }).join('')+'</select><p class="movement-choice-meta" id="'+esc(id)+'-help">'+(done?'Completed slot is locked.':C.trunkRoles[selected.id]?'Trunk role: '+esc(C.trunkRoles[selected.id]):esc(C.roles[item.exercise]||selected.category))+'</p></div>';
   }
   function chooseMovement(original,id) {
     const C=window.RoundworkChoices;
-    if(!C?.validSelection(original,id,sessionChoice().level)||availability(exById.get(id))==='no')return;
+    if(!C?.validSelection(original,id,sessionChoice().level)||availability(exById.get(id),original)==='no')return;
     if(state.logs[logKey(state.day,original)]){toast('Completed slot is locked.');return;}
     if(currentSession().items.some(x=>x.exercise!==original&&x.selectedExercise.id===id)){toast('Already in this session');return;}
+    if(resolveExercise(original)?.id!==id)delete state.equipmentChecks[logKey(state.day,original)];
     state.swaps[logKey(state.day,original)]=id;persist();closeModal();render();
     toast('Movement updated. Check its dose and guide.');
   }
@@ -115,22 +128,37 @@
   function setEquipmentReady(original,confirmed) {
     const item=currentSession().items.find(item=>item.exercise===original);
     if(!item)return;
-    const equipment=exerciseFor(item)?.equipment || [];
+    const ex=exerciseFor(item),equipment=ex.equipment || [];
     if(!equipment.length)return;
-    equipment.forEach(id=>{state.equipment[id]=confirmed?'yes':'unknown';});
+    state.equipmentChecks[logKey(state.day,original)]={exercise:ex.id,items:Object.fromEntries(equipment.map(id=>[id,confirmed]))};
     persist();render();$('#gear-ready-'+original)?.focus();
   }
+  function setCardEquipment(original,id,confirmed) {
+    const item=currentSession().items.find(item=>item.exercise===original);
+    if(!item)return;
+    const ex=exerciseFor(item),equipment=ex.equipment || [];
+    if(!equipment.includes(id))return;
+    const key=logKey(state.day,original),record=state.equipmentChecks[key];
+    const items=record?.exercise===ex.id?{...record.items}:{};
+    items[id]=confirmed;
+    state.equipmentChecks[key]={exercise:ex.id,items};
+    persist();render();$('#gear-item-'+original+'-'+id)?.focus();
+  }
   function equipmentConfirmation(item,ex) {
-    const needed=(ex.equipment || []).length>0;
-    return '<label class="equipment-confirmation"><input type="checkbox" id="gear-ready-'+esc(item.exercise)+'" data-equipment-ready="'+esc(item.exercise)+'" aria-label="Equipment ready: '+esc(ex.name)+'" '+(availability(ex)==='yes'?'checked ':'')+(needed?'':'disabled')+'><span><strong>Equipment ready</strong><small>'+(needed?'I have all the equipment listed above.':'No equipment needed')+'</small></span></label>';
+    const equipment=ex.equipment || [],needed=equipment.length>0;
+    const count=equipment.filter(id=>cardGearChecked(item.exercise,ex,id)).length;
+    const ready=cardGearReady(item.exercise,ex);
+    const label='<label class="equipment-confirmation"><input type="checkbox" id="gear-ready-'+esc(item.exercise)+'" data-equipment-ready="'+esc(item.exercise)+'" aria-label="Equipment ready: '+esc(ex.name)+'" '+(ready?'checked ':'')+(needed?'':'disabled')+'><span><strong>Equipment ready</strong><small>'+(needed?'Confirm for this exercise only.':'No equipment needed')+'</small></span></label>';
+    if(!needed)return label;
+    return '<div class="card-equipment-panel">'+label+'<details class="equipment-checklist" data-equipment-menu="'+esc(item.exercise)+'" data-equipment-exercise="'+esc(ex.id)+'"><summary><span>Equipment checklist</span><span class="equipment-check-count">'+count+' / '+equipment.length+'</span></summary><div class="equipment-check-items"><p>Select the items available for this exercise.</p>'+equipment.map(id=>'<label class="equipment-check-item"><input type="checkbox" id="gear-item-'+esc(item.exercise)+'-'+esc(id)+'" data-equipment-slot="'+esc(item.exercise)+'" data-equipment-item="'+esc(id)+'" aria-label="Equipment: '+esc(ex.name)+' · '+esc(gearById.get(id)?.name || id)+'" '+(cardGearChecked(item.exercise,ex,id)?'checked':'')+'><span>'+esc(gearById.get(id)?.name || id)+'</span></label>').join('')+'</div></details></div>';
   }
   function setExerciseComplete(original,completed) {
     const item=currentSession().items.find(item=>item.exercise===original);
     if(!item)return;
     const ex=exerciseFor(item),key=logKey(state.day,original),dose=getDose(item,ex);
     if(completed&&!state.logs[key]){
-      if(availability(ex)!=='yes'){
-        toast(availability(ex)==='unknown'?'Confirm the listed equipment on this card before training.':'Equipment unavailable. Choose a substitute or skip this movement.');
+      if(!cardGearReady(original,ex)){
+        toast(availability(ex,original)!=='no'?'Confirm the listed equipment on this card before training.':'Equipment unavailable. Choose a substitute or skip this movement.');
         render();return;
       }
       if(dose.skip){toast('Hard conditioning is off. Leave this block unmarked.');render();return;}
@@ -147,6 +175,7 @@
   function heroArt() { return '<svg class="hero-art" viewBox="0 0 180 220" fill="none" aria-hidden="true"><circle cx="93" cy="40" r="16" stroke="#d7df75" stroke-width="7"/><path d="M85 61 70 111 104 129 111 177M70 111 44 160 29 204M86 73 119 91 139 55M78 77 50 96 30 69M102 130 129 168 160 174" stroke="#d7df75" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="m24 65 11-7 11 13-11 9ZM135 40l15 7-5 19-16-6Z" fill="#eb5227"/></svg>'; }
   function weekSelect() { return `<div class="week-selector-wrap"><label class="form-label" for="week-select">Your training block</label><select id="week-select" class="week-selector">${Array.from({length:8},(_,i) => `<option value="${i+1}" ${state.week===i+1?'selected':''}>Week ${i+1} · ${i%2===0?'Lifting':'Boxing'}</option>`).join('')}</select></div>`; }
   function render() {
+    const openEquipmentMenus=[...document.querySelectorAll('[data-equipment-menu][open]')].map(el=>({slot:el.dataset.equipmentMenu,exercise:el.dataset.equipmentExercise}));
     document.querySelectorAll('[data-tab]').forEach(button => { const selected = button.dataset.tab === activeTab; button.classList.toggle('active',selected); if (selected) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current'); });
     const unknown = DATA.equipment.filter(e => gearStatus(e.id) === 'unknown').length;
     $('#gym-count').textContent = unknown ? String(unknown) : '✓';
@@ -156,6 +185,7 @@
     else if (activeTab === 'exercises') renderLibrary();
     else if (activeTab === 'sources') renderSources();
     else renderGym();
+    openEquipmentMenus.forEach(menu=>{const el=$('[data-equipment-menu="'+menu.slot+'"]');if(el?.dataset.equipmentExercise===menu.exercise)el.open=true;});
     updateSaveStatus();
   }
   function sidebar() {
@@ -174,12 +204,12 @@
   function exerciseCard(item,index) {
     const original = exById.get(item.exercise), ex = exerciseFor(item);
     if (!original || !ex) return '';
-    const dose = getDose(item,ex), available = availability(ex), done = !!state.logs[logKey(state.day,item.exercise)];
+    const dose = getDose(item,ex), available = availability(ex,item.exercise), done = !!state.logs[logKey(state.day,item.exercise)];
     const record=state.logs[logKey(state.day,item.exercise)];
     const previousDose=done && JSON.stringify(record.dose)!==JSON.stringify(dose);
     const substituted = original.id !== ex.id;
     const note = dose.notes || '';
-    const equipment = (ex.equipment || []).map(id => `<span class="equipment-chip ${gearStatus(id)==='unknown'?'unknown':gearStatus(id)==='no'?'missing':''}">${esc(gearById.get(id)?.name || id)}${gearStatus(id)==='unknown'?' · confirm':gearStatus(id)==='no'?' · unavailable':''}</span>`).join('') || '<span class="equipment-chip">No equipment needed</span>';
+    const equipment = (ex.equipment || []).map(id => `<span class="equipment-chip ${cardGearStatus(item.exercise,ex,id)==='unknown'?'unknown':cardGearStatus(item.exercise,ex,id)==='no'?'missing':''}">${esc(gearById.get(id)?.name || id)}${cardGearStatus(item.exercise,ex,id)==='unknown'?' · confirm':cardGearStatus(item.exercise,ex,id)==='no'?' · unavailable':''}</span>`).join('') || '<span class="equipment-chip">No equipment needed</span>';
     const restSeconds = parseDuration(dose.rest);
     const workSeconds = Number(dose.seconds) || 0;
     return `<article class="exercise-card ${done?'completed':''}" data-original="${esc(item.exercise)}"><div class="card-top"><span class="exercise-number">${String(index+1).padStart(2,'0')}</span><div class="exercise-main">${categoryTag(ex.category)}<h3 class="exercise-name">${esc(ex.name)}</h3><p class="exercise-purpose">${esc(ex.purpose)}</p><div class="equipment-line">${equipment}</div></div><label class="completion-control ${done?'is-done':''}"><input type="checkbox" id="complete-${esc(item.exercise)}" data-complete="${esc(item.exercise)}" aria-label="${done?'Mark incomplete':'Mark complete'}: ${esc(ex.name)}" ${done?'checked':''}><span>Done</span></label></div>${equipmentConfirmation(item,ex)}${previousDose?'<p class="exercise-note">Completed with an earlier prescription. Do not repeat this slot today.</p>':''}${substituted?`<p class="exercise-note substitute"><strong>Replaces ${esc(original.name)}.</strong> ${esc(ex.substitutionNote || original.substitutionNote || 'Same training slot; the movement and transfer differ. Follow the dose shown here.')}</p>`:''}<div class="dose-row"><div class="dose"><strong>${esc(dose.sets ?? '—')}</strong><small>SETS</small></div><div class="dose"><strong>${esc(dose.reps || (workSeconds?`${workSeconds} sec`:'As coached'))}</strong><small>${/min|sec/.test(String(dose.reps))?'DURATION':'REPETITIONS / DISTANCE'}</small></div><div class="dose"><strong>${esc(dose.rest ? dose.rest + ' sec' : '—')}</strong><small>REST</small></div></div>${dose.gated?`<p class="exercise-note"><strong>${dose.skip?'Skip hard conditioning.':'Easy practice only.'}</strong> ${state.readiness==='tired'?'Recovery mode is on.':state.coachLoad!=='technical'?'Coaching load is not confirmed light.':'Rookie uses easy equipment practice.'}</p>`:''}${note?`<p class="exercise-note">${esc(note)}</p>`:''}${available==='no'?`<p class="exercise-note"><strong>No suitable confirmed alternative.</strong> ${esc(ex.noEquipmentNote || 'Skip this exercise until suitable equipment is available. A different movement may not replace its training benefit.')}</p>`:''}<div class="card-actions">${movementSelect(item,ex,done)}${restSeconds?`<button class="text-button" data-timer="${restSeconds}" data-timer-label="Rest · ${esc(ex.name)}">◷ Rest</button>`:''}${workSeconds&&!dose.skip?`<button class="text-button" data-timer="${workSeconds}" data-timer-label="Work · ${esc(ex.name)}">◷ Work</button>`:''}<button class="button button-dark" data-guide="${esc(ex.id)}">View guide <span aria-hidden="true">↗</span></button></div></article>`;
@@ -331,7 +361,7 @@
     if(button.dataset.timer){setTimer(button.dataset.timer,button.dataset.timerLabel);return;}
     if(button.dataset.video){if(modal?.type!=='guide')return;if(button.dataset.video==='load')loadVideo();else stopVideo();return;}
     if(button.dataset.demo){if(modal?.type!=='guide')return;if(button.dataset.demo==='play'){modal.playing=!modal.playing;clearInterval(demoInterval);button.textContent=modal.playing?'Pause Ⅱ':'Play slowly ▷';if(modal.playing)demoInterval=setInterval(()=>updateDemo((modal?.frame||0)+1),2000);}else{clearInterval(demoInterval);demoInterval=null;modal.playing=false;$('#modal-root [data-demo="play"]').textContent='Play slowly ▷';updateDemo(modal.frame+(button.dataset.demo==='next'?1:-1));}return;}
-    if(button.dataset.confirmReset){const type=button.dataset.confirmReset;if(type==='equipment')state.equipment={};else{const prefix=`${state.week}:${state.day}:`;Object.keys(state.logs).filter(k=>k.startsWith(prefix)).forEach(k=>delete state.logs[k]);delete state.sessions[sessionKey()];}persist();closeModal();render();toast(type==='equipment'?'Equipment choices reset.':'This session log was reset.');return;}
+    if(button.dataset.confirmReset){const type=button.dataset.confirmReset;if(type==='equipment'){state.equipment={};state.equipmentChecks={};}else{const prefix=`${state.week}:${state.day}:`;Object.keys(state.logs).filter(k=>k.startsWith(prefix)).forEach(k=>delete state.logs[k]);delete state.sessions[sessionKey()];Object.keys(state.equipmentChecks).filter(k=>k.startsWith(prefix)).forEach(k=>delete state.equipmentChecks[k]);}persist();closeModal();render();toast(type==='equipment'?'Equipment choices reset.':'This session log was reset.');return;}
     const action=button.dataset.action;
     if(action==='next-boxing'){state.week=state.week%2===0?state.week:Math.min(8,state.week+1);persist();render();}
     else if(action==='reset-equipment')confirmReset('equipment');
@@ -340,7 +370,8 @@
     else if(action==='save-session'){state.sessions[sessionKey()]={at:new Date().toISOString(),readiness:state.readiness,coachLoad:state.coachLoad,settings:sessionChoice(),prescription:currentSession().items.map(item=>({exercise:item.exercise,selected:exerciseFor(item).id,dose:getDose(item,exerciseFor(item))}))};persist();closeModal();render();toast('Session saved on this device.');}
   });
   document.addEventListener('change',event => {
-    if(event.target.dataset?.equipmentReady){setEquipmentReady(event.target.dataset.equipmentReady,event.target.checked);}
+    if(event.target.dataset?.equipmentItem){setCardEquipment(event.target.dataset.equipmentSlot,event.target.dataset.equipmentItem,event.target.checked);}
+    else if(event.target.dataset?.equipmentReady){setEquipmentReady(event.target.dataset.equipmentReady,event.target.checked);}
     else if(event.target.dataset?.complete){setExerciseComplete(event.target.dataset.complete,event.target.checked);}
     else if(event.target.dataset?.movement){chooseMovement(event.target.dataset.movement,event.target.value);$('#'+event.target.id)?.focus();}
     else if(['level-select','duration-select','progression-ready'].includes(event.target.id)){
