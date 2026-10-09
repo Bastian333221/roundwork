@@ -1,4 +1,4 @@
-# ROUNDWORK 1.4.0
+# ROUNDWORK 1.4.1
 
 Boxing gym sessions include a Choose your exercises menu with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 

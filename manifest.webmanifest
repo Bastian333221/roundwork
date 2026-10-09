@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Roundwork — Boxing Gym Companion",
   "short_name": "Roundwork",
-  "start_url": "./?v=1.4.0",
+  "start_url": "./?v=1.4.1",
   "scope": "./",
   "display": "standalone",
   "background_color": "#eeeee6",
