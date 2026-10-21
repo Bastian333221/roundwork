@@ -80,10 +80,11 @@
   }
   function recordDate(value){return window.RoundworkSchedule.dateLabel(value,window.RoundworkI18n?.language || 'en');}
   function routineHistory(){
-    const prefix=sessionKey()+':',records=Object.entries(state.logs).filter(([key])=>key.startsWith(prefix));
+    const prefix=sessionKey()+':',records=Object.entries(state.logs).filter(([key,record])=>key.startsWith(prefix)&&record&&typeof record==='object');
+    const session=state.sessions[sessionKey()];
     const dates=[...new Set(records.map(([,record])=>recordDate(record.at)).filter(Boolean))];
     const time=value=>{const label=recordDate(value);return label?'<time data-no-i18n datetime="'+esc(value)+'">'+esc(label)+'</time>':'<span>Date unavailable</span>';};
-    return '<section class="routine-history"><h3>Routine record</h3><p><strong>'+esc(routineName(state.day))+'</strong></p>'+(records.length?'<p><span>Completed on</span>: <span data-no-i18n>'+esc(dates.join(' / '))+'</span></p><details><summary>Exercise completion dates</summary><ul>'+records.map(([key,record])=>'<li><span>'+esc(exById.get(record.exercise)?.name || exById.get(key.slice(prefix.length))?.name || '')+'</span>'+time(record.at)+'</li>').join('')+'</ul></details>':'<p>No exercises recorded for this routine yet.</p>')+'</section>';
+    return '<section class="routine-history"><h3>Routine record</h3><p><strong>'+esc(routineName(state.day))+'</strong></p>'+(session?'<p><span>Session recorded on</span>: '+time(session.at)+'</p>':'')+(records.length?'<p><span>Completed on</span>: <span data-no-i18n>'+esc(dates.join(' / '))+'</span></p><details><summary>Exercise completion dates</summary><ul>'+records.map(([key,record])=>'<li><span>'+esc(exById.get(record.exercise)?.name || exById.get(key.slice(prefix.length))?.name || '')+'</span>'+time(record.at)+'</li>').join('')+'</ul></details>':'<p>No exercises recorded for this routine yet.</p>')+'</section>';
   }
   function logKey(day,original) { return `${state.week}:${day}:${original}`; }
   function sessionKey() { return `${state.week}:${state.day}`; }

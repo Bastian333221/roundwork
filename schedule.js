@@ -52,7 +52,7 @@ window.RoundworkSchedule=(()=>{
     ['Strength sessions are on consecutive weekdays. Review recovery spacing with your coach before training.','Las sesiones de fuerza están en días consecutivos. Revisa el tiempo de recuperación con tu entrenador antes de entrenar.'],
     ['Recovery guidance','Orientación sobre recuperación'],['Coaching A','Boxeo A'],['Coaching B','Boxeo B'],
     ['Recovery A','Recuperación A'],['Recovery B','Recuperación B'],['Power A','Potencia A'],['Power B','Potencia B'],['Skills','Técnica'],
-    ['Routine record','Registro de la rutina'],['Completed on','Completado el'],['Exercise completion dates','Fechas de realización de los ejercicios'],
+    ['Session recorded on','Sesión registrada el'],['Routine record','Registro de la rutina'],['Completed on','Completado el'],['Exercise completion dates','Fechas de realización de los ejercicios'],
     ['No exercises recorded for this routine yet.','Todavía no hay ejercicios registrados para esta rutina.'],['Date unavailable','Fecha no disponible'],
     ['Reset this routine log','Restablecer el registro de esta rutina'],['Routine progress','Progreso de la rutina'],
     ['Mark each exercise after its prescribed sets. Your record follows the routine when its weekday changes.','Marca cada ejercicio después de sus series indicadas. El registro sigue a la rutina cuando cambia su día.'],

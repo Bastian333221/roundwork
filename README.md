@@ -1,4 +1,4 @@
-# ROUNDWORK 1.5.0
+# ROUNDWORK 1.5.1
 
 Boxing gym sessions include a Choose movement dropdown inside every exercise card, beside its timers and guide, with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. A Done checkbox in each card saves its actual movement and dose in the selected week/day log. Uncheck to undo completion. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 
