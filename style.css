@@ -108,3 +108,5 @@
 .comparison-panel{border:1px solid var(--line,#d3d7c9);border-radius:18px;padding:22px;margin:22px 0;background:#fafaf6;}.comparison-scroll{overflow:auto;}.comparison-table{border-collapse:collapse;width:100%;min-width:580px;margin-top:20px;}.comparison-table td,.comparison-table th{text-align:left;vertical-align:top;padding:14px 12px;border-bottom:1px solid var(--line,#d3d7c9);}.comparison-table th{font-size:.8rem;}.comparison-table .actual-summary{margin:0;min-width:180px;}
 .modal.actual-editor,.modal.manual-session{max-width:760px;}.history-exercises .actual-summary{margin:14px 0;}
 @media(max-width:420px){.actual-options{gap:10px;}.actual-row{gap:7px;grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 30px;}.actual-row .icon-button{width:30px;height:36px;}.comparison-panel{padding:16px 12px;}}
+
+.custom-exercise-card{border-left:4px solid #607748;}.custom-exercise-card .card-top h3{font-size:1.35rem;margin-top:12px;}.custom-exercise-card .completion-control input{width:24px;height:24px;}.custom-exercise-card .card-actions{flex-wrap:wrap;}.modal-content>.form-label{margin-top:18px;}

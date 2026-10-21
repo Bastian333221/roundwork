@@ -1,4 +1,6 @@
-# ROUNDWORK 1.8.0
+# ROUNDWORK 1.9.0
+
+This release adds personal exercise entries to Your session and saved Log sessions. Use Add exercise or Customize exercise to select a library movement or enter a custom name, choose its section and either replace an original movement or add alongside it. Record individual sets, kg/lb and repetitions, time in seconds/minutes, distance in metres/yards, equipment details and notes. The Log includes these entries in comparisons and backups. Unknown values stay blank. Original prescribed details are retained when replaced and excluded from completion totals. User additions are not part of the planner's time estimate or its exercise recommendations.
 
 Boxing gym sessions include a Choose movement dropdown inside every exercise card, beside its timers and guide, with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. A Done checkbox in each card saves its actual movement and dose in the selected week/day log. Uncheck to undo completion. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 
@@ -55,3 +57,9 @@ Run node tests/check-history.cjs for migration, repeated-session, weekly-summary
 Record actuals on an exercise to enter individual sets, weight, kg/lb, load basis and repetitions. Optional time, distance and notes support timed work or resistance that cannot be quantified. Values are self-reported and remain separate from the prescription. Saving marks that exercise as performed without changing equipment confirmations. Log supports comparisons for the same exercise and displays the original units and load basis. Add past session lets the user select the routine, numbered training week and actual calendar date, then mark remembered exercises and enter optional actuals. No performed values or historical prescriptions are inferred. Manual entries can be edited independently of the active routine, and all entries are included in backups.
 
 Run node tests/check-performance.cjs for actual-load, manual-session, date, comparison and persistence regressions.
+
+## Session personalization
+
+Your session and each Log entry support Add exercise, and planned exercise cards support Customize exercise. Choose a library movement or a custom name, assign a section, and add alongside or replace an original slot. Original data remains stored and is labelled as replaced; replacement slots are excluded from performed totals and comparisons. Custom exercises retain their own equipment details and an optional HTTPS reference. Current additions can be pending or marked done; previous session additions are recorded as performed. Time supports seconds/minutes and distance supports metres/yards, retaining entered units and SI equivalents. Custom names, sections, references, measurements and replacement relationships are included in backups and independent repeated attempts. Planner estimates cover prescribed work only.
+
+Run node tests/check-customization.cjs for custom exercise editor flow, replacement records, unit conversion and retention, archived-session isolation, reload and full backup import.
