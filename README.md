@@ -1,4 +1,4 @@
-# ROUNDWORK 1.6.0
+# ROUNDWORK 1.7.0
 
 Boxing gym sessions include a Choose movement dropdown inside every exercise card, beside its timers and guide, with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. A Done checkbox in each card saves its actual movement and dose in the selected week/day log. Uncheck to undo completion. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 
@@ -43,3 +43,9 @@ Each exercise card has independent equipment confirmation for its selected movem
 Flexible boxing-week schedule: click any weekday tile to open its training-plan dropdown. Select Power & strength A/B, Skills & conditioning, Coaching A/B, or the additional Skills & aerobic A/B routines. Selecting a routine exchanges it with the routine currently assigned to that weekday, then displays the selected plan. The separate Adapt this week editor is removed. Mappings remain per boxing week and routine IDs/log keys stay stable. Exercise choices, doses, gear checks and recorded dates remain attached to their routines. Restore original weekdays resets only assignments. Recovery guidance and consecutive-strength-day warnings remain. Menus support Escape, arrow keys, Home/End, Tab and outside-click dismissal.
 
 Friday/Sunday workouts have separate stable routine IDs and use the existing skills/aerobic prescriptions without extra rope intervals. Each weekday menu has Make this a recovery day / Resume planned session. Recovery choices follow their routines when rescheduled and are saved per boxing week, included in backups, and do not erase exercise records. Older logged recovery sessions retain their recovery choice. Available workouts do not prescribe training seven days a week.
+
+## Session history
+
+Log combines all recorded routines within a selected training week, with an All training weeks filter. Each entry shows its recording dates, saved/partial status, completed exercises and saved prescriptions. Start another session archives the current attempt and opens a new attempt with separate completion and equipment confirmations, preserving movement choices, level and time. Old logs migrate without inventing completion dates. Session instances and active attempt links are included in backup/import. Prescriptions are not measured weights, repetitions or training duration.
+
+Run node tests/check-history.cjs for migration, repeated-session, weekly-summary and backup regressions.

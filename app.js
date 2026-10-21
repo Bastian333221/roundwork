@@ -9,7 +9,7 @@
   const exById = new Map((DATA.exercises || []).map(e => [e.id,e]));
   const gearById = new Map((DATA.equipment || []).map(e => [e.id,e]));
   const days = DATA.days || [];
-  const baseState = {week:2,day:days[0]?.id || 'monday',equipment:{},coachLoad:'unknown',readiness:'normal',notes:'',logs:{},sessions:{},swaps:{},sessionSettings:{},equipmentChecks:{},schedules:{},recoveryDays:{}};
+  const baseState = {week:2,day:days[0]?.id || 'monday',equipment:{},coachLoad:'unknown',readiness:'normal',notes:'',logs:{},sessions:{},swaps:{},sessionSettings:{},equipmentChecks:{},schedules:{},recoveryDays:{},sessionHistory:{},activeSessions:{}};
   let state = {...baseState};
   let storageWorks = true;
   try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (saved && typeof saved === 'object') state = {...baseState,...saved}; }
@@ -24,12 +24,15 @@
   state.equipmentChecks=window.RoundworkChoices.cleanEquipmentChecks(state.equipmentChecks);
   state.schedules=window.RoundworkSchedule.cleanSchedules(state.schedules);
   state.recoveryDays=window.RoundworkSchedule.recoveryChoices(state);
-  let activeTab = ['session','plan','exercises','gym','sources'].includes(location.hash.slice(1)) ? location.hash.slice(1) : location.hash.startsWith('#source-')?'sources':'session';
+  Object.assign(state,window.RoundworkHistory.restore(state));
+  let logWeek=String(state.week);
+  let activeTab = ['session','plan','exercises','gym','sources','log'].includes(location.hash.slice(1)) ? location.hash.slice(1) : location.hash.startsWith('#source-')?'sources':'session';
   let openDayMenu=null;
   let librarySearch = '', libraryCategory = 'all', modal = null, demoInterval = null, lastFocus = null;
   let toastTimeout;
   const timer = {duration:60,remaining:60,running:false,deadline:0,label:'REST TIMER',finished:false};
   function persist() {
+    checkpointHistory();
     try { localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); storageWorks = true; }
     catch (_) { storageWorks = false; }
     updateSaveStatus();
@@ -128,10 +131,42 @@
     const session=state.sessions[sessionKey()];
     const dates=[...new Set(records.map(([,record])=>recordDate(record.at)).filter(Boolean))];
     const time=value=>{const label=recordDate(value);return label?'<time data-no-i18n datetime="'+esc(value)+'">'+esc(label)+'</time>':'<span>Date unavailable</span>';};
-    return '<section class="routine-history"><h3>Routine record</h3><p><strong>'+esc(routineName(state.day))+'</strong></p>'+(session?'<p><span>Session recorded on</span>: '+time(session.at)+'</p>':'')+(records.length?'<p><span>Completed on</span>: <span data-no-i18n>'+esc(dates.join(' / '))+'</span></p><details><summary>Exercise completion dates</summary><ul>'+records.map(([key,record])=>'<li><span>'+esc(exById.get(record.exercise)?.name || exById.get(key.slice(prefix.length))?.name || '')+'</span>'+time(record.at)+'</li>').join('')+'</ul></details>':'<p>No exercises recorded for this routine yet.</p>')+'</section>';
+    return '<section class="routine-history"><h3>Routine record</h3><p><strong>'+esc(routineName(state.day))+'</strong></p>'+(session?'<p><span>Session recorded on</span>: '+time(session.at)+'</p>':'')+(records.length?'<p><span>Completed on</span>: <span data-no-i18n>'+esc(dates.join(' / '))+'</span></p><details><summary>Exercise completion dates</summary><ul>'+records.map(([key,record])=>'<li><span>'+esc(exById.get(record.exercise)?.name || exById.get(key.slice(prefix.length))?.name || '')+'</span>'+time(record.at)+'</li>').join('')+'</ul></details>':'<p>No exercises recorded for this routine yet.</p>')+'<div class="history-actions"><button class="button button-ghost" data-go="log">View weekly log</button>'+(window.RoundworkHistory.hasWork(state,sessionKey())?'<button class="button button-dark" data-action="repeat-session">Start another session</button>':'')+'</div></section>';
   }
   function logKey(day,original) { return `${state.week}:${day}:${original}`; }
   function sessionKey() { return `${state.week}:${state.day}`; }
+  function historyMeta(){
+    const plan=currentSession();
+    return {title:routineName(state.day),scheduledDay:scheduledDay(),settings:sessionChoice(),readiness:state.readiness,coachLoad:state.coachLoad,prescription:plan.items.map(item=>({exercise:item.exercise,selected:exerciseFor(item).id,dose:getDose(item,exerciseFor(item))}))};
+  }
+  function checkpointHistory(){
+    const key=sessionKey(),H=window.RoundworkHistory;
+    H.checkpoint(state,key,H.hasWork(state,key)?historyMeta():{});
+  }
+  function repeatSession(){
+    if(state.week%2!==0)return;
+    openModal(modalHeader('TRAINING LOG','Start another session?')+'<div class="modal-content"><p>The current attempt stays in Log. The new attempt starts with unchecked exercises and equipment. Your movement choices, level and time stay selected.</p><div class="history-actions"><button class="button button-ghost" data-close>Keep current session</button><button class="button button-primary" data-action="start-another-session">Start another session</button></div></div>','repeat-session');
+  }
+  function historyTime(value){
+    const label=recordDate(value);
+    if(!label)return '<span>Date unavailable</span>';
+    const time=new Intl.DateTimeFormat(window.RoundworkI18n?.language==='es'?'es-CO':'en-US',{hour:'numeric',minute:'2-digit'}).format(new Date(value));
+    return '<time data-no-i18n datetime="'+esc(value)+'">'+esc(label)+' · '+esc(time)+'</time>';
+  }
+  function historyDose(d={}){
+    return '<dl class="history-dose"><div><dt>Sets</dt><dd>'+esc(d.sets??'—')+'</dd></div><div><dt>Repetitions / distance</dt><dd>'+esc(d.reps||'—')+'</dd></div>'+(d.seconds?'<div><dt>Work seconds</dt><dd>'+esc(d.seconds)+'</dd></div>':'')+'<div><dt>Rest seconds</dt><dd>'+esc(d.rest??'—')+'</dd></div></dl>';
+  }
+  function historyCard(record){
+    const key=record.week+':'+record.routine,active=state.activeSessions?.[key]===record.id;
+    const status=record.finishedAt?'Saved session':record.closedAt?'Partial session':'In progress';
+    const rows=new Map(record.prescription.map(item=>[item.exercise,{...item,done:record.exercises.find(ex=>ex.slot===item.exercise)}]));
+    for(const done of record.exercises)if(!rows.has(done.slot))rows.set(done.slot,{exercise:done.slot,selected:done.exercise,dose:done.dose,done});
+    return '<article class="history-card" data-history-id="'+esc(record.id)+'"><div class="history-card-head"><div><span class="pill">Week '+record.week+'</span> <span class="pill">'+status+'</span>'+(active?' <span class="pill">Current session</span>':'')+'<h2>'+esc(record.title||days.find(day=>day.id===record.routine)?.title||record.routine)+'</h2></div><div class="history-count"><strong>'+record.exercises.length+'</strong><span>Exercises marked done</span></div></div><p><span>First recorded on</span>: '+historyTime(record.firstRecordedAt)+'</p>'+(record.finishedAt?'<p><span>Session saved on</span>: '+historyTime(record.finishedAt)+'</p>':'')+'<details class="history-detail"><summary>Session details</summary><p><span>Last updated</span>: '+historyTime(record.updatedAt)+'</p><div class="history-settings"><span>'+esc({rookie:'Rookie',intermediate:'Intermediate',advanced:'Advanced'}[record.settings.level])+'</span><span>Time available</span>: <strong>'+record.settings.minutes+' min</strong>'+(record.readiness?'<span>Readiness</span>: <strong>'+({normal:'Ready to train',tired:'Tired'}[record.readiness])+'</strong>':'')+(record.coachLoad?'<span>Coaching load</span>: <strong>'+({unknown:'Unknown',technical:'Technical / light',hard:'Hard'}[record.coachLoad])+'</strong>':'')+'</div><p class="session-day-note">Prescribed work, not measured performance. Times are when you recorded the work, not automatic workout start or finish times.</p><ul class="history-exercises">'+[...rows.values()].map(row=>{const selected=row.done?.exercise||row.selected,d=row.done?.dose||row.dose;return '<li><div class="history-exercise-title"><strong>'+esc(exById.get(selected)?.name||selected)+'</strong><span class="pill">'+(row.done?'Marked done':'Not marked done')+'</span></div>'+historyDose(d)+(row.done?'<p><span>Completed on</span>: '+historyTime(row.done.at)+'</p>':'')+(d?.notes?'<p class="session-day-note">'+esc(d.notes)+'</p>':'')+'</li>';}).join('')+'</ul></details></article>';
+  }
+  function renderLog(){
+    const records=window.RoundworkHistory.records(state,logWeek),saved=records.filter(record=>record.finishedAt).length,completed=records.reduce((sum,record)=>sum+record.exercises.length,0);
+    main.innerHTML='<div class="page-intro"><div><div class="page-kicker">Weekly overview</div><h1 class="page-title">Training log</h1><p class="page-description">Completed exercises and saved sessions appear together here. Repeating a routine creates a separate entry when you use Start another session.</p></div><div><label class="form-label" for="log-week-select">Training week</label><select class="panel-select" id="log-week-select"><option value="all" '+(logWeek==='all'?'selected':'')+'>All training weeks</option>'+Array.from({length:8},(_,index)=>'<option value="'+(index+1)+'" '+(Number(logWeek)===index+1?'selected':'')+'>Week '+(index+1)+'</option>').join('')+'</select></div></div><div class="history-summary"><div><strong>'+saved+'</strong><span>Saved sessions</span></div><div><strong>'+(records.length-saved)+'</strong><span>Open or partial sessions</span></div><div><strong>'+completed+'</strong><span>Exercises marked done</span></div></div>'+(logWeek==='all'?'':'<p class="session-day-note">Only the selected training week is shown. Choose All training weeks to see the full history.</p>')+'<div class="history-list">'+(records.length?records.map(historyCard).join(''):'<section class="empty-state"><h2>No sessions recorded for this selection.</h2><p>Check Done on an exercise or save a session to add it here.</p></section>')+'</div>';
+  }
   function getAlternatives(ex) { return (ex.alternatives || []).map(id => exById.get(typeof id === 'string' ? id : id.id)).filter(Boolean); }
   function resolveExercise(original) {
     const originalEx = exById.get(original);
@@ -263,6 +298,7 @@
     else if (activeTab === 'plan') renderPlan();
     else if (activeTab === 'exercises') renderLibrary();
     else if (activeTab === 'sources') renderSources();
+    else if (activeTab === 'log') renderLog();
     else renderGym();
     if(openHistory&&$('.routine-history details'))$('.routine-history details').open=true;
     openEquipmentMenus.forEach(menu=>{const el=$('[data-equipment-menu="'+menu.slot+'"]');if(el?.dataset.equipmentExercise===menu.exercise)el.open=true;});
@@ -395,14 +431,14 @@
   }
   function confirmReset(type) {
     const equipment = type==='equipment';
-    openModal(`${modalHeader('LOCAL DATA',equipment?'Reset your equipment?':'Reset this session log?')}<div class="modal-content"><p>${equipment?'All equipment choices return to “not sure”. Your notes and training logs remain saved.':'This resets the selected routine’s completion marks for this training week. Weekday assignments and other routines stay saved.'}</p><div style="display:flex;gap:10px"><button class="button button-ghost" data-close>Keep it</button><button class="button button-primary" data-confirm-reset="${type}">Reset ${equipment?'equipment':'session'}</button></div></div>`,'confirm');
+    openModal(`${modalHeader('LOCAL DATA',equipment?'Reset your equipment?':'Reset this session log?')}<div class="modal-content"><p>${equipment?'All equipment choices return to “not sure”. Your notes and training logs remain saved.':'Reset affects this attempt only. Earlier attempts remain in Log.'}</p><div style="display:flex;gap:10px"><button class="button button-ghost" data-close>Keep it</button><button class="button button-primary" data-confirm-reset="${type}">Reset ${equipment?'equipment':'session'}</button></div></div>`,'confirm');
   }
   function finishSession() {
     const day = days.find(d => d.id===state.day), items = currentSession().items;
     const complete = items.filter(item => state.logs[logKey(state.day,item.exercise)]).length;
     openModal(`${modalHeader('FINISH YOUR SESSION',state.sessions[sessionKey()]?'Your session is recorded.':'Work done. Recover well.')}<div class="modal-content"><p>${complete} of ${items.length} movements marked complete. It is fine to finish with skipped movements—only the exercises you marked are counted.</p><p>${state.readiness==='tired'?'Recovery adjustments were active today.':'Check that your next coached session still feels fresh.'} Session records are manual and stay on this device.</p><div style="display:flex;gap:10px"><button class="button button-ghost" data-close>Back</button><button class="button button-primary" data-action="save-session">${state.sessions[sessionKey()]?'Update record':'Save session'} ✓</button></div></div>`,'finish');
   }
-  function setTab(tab) { if (!['session','plan','exercises','gym','sources'].includes(tab)) return; closeDayMenu();activeTab=tab; history.replaceState(null,'',`#${tab}`); render(); window.scrollTo({top:0,behavior:'instant'}); }
+  function setTab(tab) { if (!['session','plan','exercises','gym','sources','log'].includes(tab)) return; closeDayMenu();if(tab==='log')logWeek=String(state.week);activeTab=tab; history.replaceState(null,'',`#${tab}`); render(); window.scrollTo({top:0,behavior:'instant'}); }
   function setTimer(duration,label) {
     if (timer.running && !window.confirm(window.RoundworkI18n?.translate('Replace the timer that is currently running?') || 'Replace the timer that is currently running?')) return;
     timer.duration = Math.max(1,Number(duration)||60); timer.remaining=timer.duration; timer.running=false; timer.finished=false; timer.label=label || 'REST TIMER';
@@ -454,6 +490,8 @@
     else if(action==='reset-equipment')confirmReset('equipment');
     else if(action==='reset-session')confirmReset('session');
     else if(action==='complete-session')finishSession();
+    else if(action==='repeat-session')repeatSession();
+    else if(action==='start-another-session'&&modal?.type==='repeat-session'){window.RoundworkHistory.startAnother(state,sessionKey(),historyMeta());persist();closeModal();render();toast('New session ready. The previous attempt is kept in Log.');}
     else if(action==='save-session'){state.sessions[sessionKey()]={at:state.sessions[sessionKey()]?.at || new Date().toISOString(),updatedAt:new Date().toISOString(),readiness:state.readiness,coachLoad:state.coachLoad,settings:sessionChoice(),prescription:currentSession().items.map(item=>({exercise:item.exercise,selected:exerciseFor(item).id,dose:getDose(item,exerciseFor(item))}))};persist();closeModal();render();toast('Session saved on this device.');}
   });
   document.addEventListener('change',event => {
@@ -468,6 +506,7 @@
       if(id==='progression-ready')choice.progressionReady=event.target.checked;
       state.sessionSettings[sessionKey()]=window.RoundworkPlanner.cleanChoice(choice,state.day);persist();render();$('#'+id)?.focus();toast('Session updated. Keep the prescribed rests; completed work remains recorded.');
     }
+    else if(event.target.id==='log-week-select'){if(['all','1','2','3','4','5','6','7','8'].includes(event.target.value)){logWeek=event.target.value;renderLog();}}
     else if(event.target.id==='week-select'){openDayMenu=null;state.week=Number(event.target.value);persist();render();}
     else if(event.target.id==='coach-load'){state.coachLoad=event.target.value;persist();render();}
     else if(event.target.id==='category-filter'){libraryCategory=event.target.value;renderLibraryResults();}
@@ -498,7 +537,7 @@
   });
   window.addEventListener?.('resize',()=>{if(openDayMenu)positionDayMenu();});
   document.addEventListener('scroll',()=>{if(openDayMenu)positionDayMenu();},true);
-  document.addEventListener('roundwork-language',()=>{if(activeTab==='session')render();});
+  document.addEventListener('roundwork-language',()=>{if(['session','log'].includes(activeTab))render();});
   $('#help-button').addEventListener('click',() => openModal(`${modalHeader('ROUNDWORK','A clear plan for the gym.')}<div class="modal-content"><p>Start with Week 2, confirm the equipment in <strong>My gym</strong>, and tell the app how demanding your coached sessions are. Every gym movement opens with illustrated mechanics and written steps. Expand the video demonstration for a fuller view.</p><p>Weeks 1, 3, 5, and 7 preserve your existing lifting routine. Weeks 2, 4, 6, and 8 provide the boxing-focused sessions. Coaching is Thursday and Saturday.</p><p>Week and day choices are manual. Nothing is inferred from today’s date. Saved equipment, notes, substitutions, and training marks stay in this browser on this device.</p><button class="button button-primary" data-close>Ready to go ↗</button></div>`,'about'));
   document.addEventListener('roundwork-language',() => { if (activeTab==='exercises') renderLibraryResults(); });
   render();
