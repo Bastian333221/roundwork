@@ -38,6 +38,10 @@ window.RoundworkSchedule=(()=>{
     return Number.isFinite(date.getTime())?new Intl.DateTimeFormat(language==='es'?'es-CO':'en-US',{weekday:'long',year:'numeric',month:'short',day:'numeric'}).format(date):null;
   }
   const pairs=[
+    ['Choose training plan','Elegir plan de entrenamiento'],['Close menu','Cerrar menú'],['Current plan','Plan actual'],
+    ['Choose a routine for this weekday. Its current weekday exchanges routines with this day.','Elige una rutina para este día. Su día actual intercambia rutinas con este día.'],
+    ['Click a weekday to choose its training plan.','Pulsa un día de la semana para elegir su plan de entrenamiento.'],
+    ['Default schedule. Click a weekday in Session to choose its training plan.','Horario original. Pulsa un día en Sesión para elegir su plan de entrenamiento.'],
     ['Adapt this week','Adapta esta semana'],['Routine','Rutina'],['Scheduled for','Programada para'],
     ['Start first strength routine on','Iniciar la primera rutina de fuerza el'],['Shift entire week','Desplazar toda la semana'],
     ['Every session moves, including coaching and recovery. Days that pass Sunday wrap to Monday.','Se desplazan todas las sesiones, incluidas las de boxeo y recuperación. Los días posteriores al domingo pasan al lunes.'],

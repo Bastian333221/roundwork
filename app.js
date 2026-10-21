@@ -24,6 +24,7 @@
   state.equipmentChecks=window.RoundworkChoices.cleanEquipmentChecks(state.equipmentChecks);
   state.schedules=window.RoundworkSchedule.cleanSchedules(state.schedules);
   let activeTab = ['session','plan','exercises','gym','sources'].includes(location.hash.slice(1)) ? location.hash.slice(1) : location.hash.startsWith('#source-')?'sources':'session';
+  let openDayMenu=null;
   let librarySearch = '', libraryCategory = 'all', modal = null, demoInterval = null, lastFocus = null;
   let toastTimeout;
   const timer = {duration:60,remaining:60,running:false,deadline:0,label:'REST TIMER',finished:false};
@@ -60,16 +61,47 @@
   function calendarLabel(id){return days.find(day=>day.id===id)?.label || '';}
   function scheduleTabs(){
     const map=weekSchedule(),short={mon:'Power A',tue:'Skills',wed:'Power B',thu:'Coaching A',fri:'Recovery A',sat:'Coaching B',sun:'Recovery B'};
-    return '<div class="day-tabs" aria-label="Training day">'+days.map(day=>{
+    const menu=openDayMenu&&days.some(day=>day.id===openDayMenu)?'<div id="day-plan-menu" class="day-plan-menu" role="menu" aria-label="Choose training plan: '+esc(calendarLabel(openDayMenu))+'"><div class="day-plan-menu-heading"><strong>'+esc(calendarLabel(openDayMenu))+'</strong><button class="icon-button" data-close-day-menu aria-label="Close menu">×</button></div><p>Choose a routine for this weekday. Its current weekday exchanges routines with this day.</p>'+days.map(day=>'<button class="day-plan-option" role="menuitemradio" tabindex="-1" aria-checked="'+(map[openDayMenu]===day.id)+'" data-day-plan-option="'+esc(day.id)+'" data-plan-for="'+esc(openDayMenu)+'"><span>'+esc(routineName(day.id))+'</span>'+(map[openDayMenu]===day.id?'<small>Current plan</small>':'')+'</button>').join('')+'</div>':'';
+    return '<div class="day-plan-navigation"><div class="day-tabs" aria-label="Training day">'+days.map(day=>{
       const routine=map[day.id],active=routine===state.day,kind=['thu','sat'].includes(routine)?'COACH':['fri','sun'].includes(routine)?'RECOVER':'GYM';
-      return '<button class="day-tab '+(active?'active':'')+'" data-day="'+esc(routine)+'" data-calendar-day="'+esc(day.id)+'" aria-label="'+esc(day.label)+' · '+esc(routineName(routine))+'" aria-pressed="'+active+'"><span class="day-full">'+esc(day.label)+'</span><span class="day-short">'+esc(day.label.slice(0,3))+'</span><small>'+kind+'</small><span class="day-routine">'+esc(short[routine])+'</span></button>';
-    }).join('')+'</div>';
+      return '<button class="day-tab '+(active?'active':'')+'" data-day="'+esc(routine)+'" data-calendar-day="'+esc(day.id)+'" aria-label="'+esc(day.label)+' · '+esc(routineName(routine))+'" aria-pressed="'+active+'" aria-haspopup="menu" aria-controls="day-plan-menu" aria-expanded="'+(openDayMenu===day.id)+'"><span class="day-full">'+esc(day.label)+'</span><span class="day-short">'+esc(day.label.slice(0,3))+'</span><small>'+kind+'</small><span class="day-routine">'+esc(short[routine])+' <span aria-hidden="true">▾</span></span></button>';
+    }).join('')+'</div>'+menu+'</div>';
   }
   function scheduleControls(){
-    const assigned=scheduledDay(),start=scheduledDay('mon');
-    const options=selected=>days.map(day=>'<option value="'+esc(day.id)+'" '+(day.id===selected?'selected':'')+'>'+esc(day.label)+'</option>').join('');
     const warning=window.RoundworkSchedule.consecutiveStrength(weekSchedule());
-    return '<section class="week-schedule" aria-labelledby="week-schedule-title"><div class="schedule-current"><span>Routine</span><strong>'+esc(routineName(state.day))+'</strong><span>Scheduled for</span><strong>'+esc(calendarLabel(assigned))+'</strong></div><details id="schedule-editor"><summary id="week-schedule-title">Adapt this week</summary><div class="schedule-editor-body"><div class="schedule-controls"><div><label class="form-label" for="schedule-start">Start first strength routine on</label><select id="schedule-start" class="panel-select">'+options(start)+'</select><button class="button button-dark" data-action="shift-week">Shift entire week</button><p>Every session moves, including coaching and recovery. Days that pass Sunday wrap to Monday.</p></div><div><label class="form-label" for="schedule-move-target">Move selected routine to</label><select id="schedule-move-target" class="panel-select">'+options(assigned)+'</select><button class="button button-dark" data-action="move-routine">Move and exchange</button><p>The destination routine exchanges weekdays with this routine.</p><p id="schedule-move-preview" role="status">Already on this weekday.</p></div></div><p>Weekday assignments change; exercise choices, equipment checks and completion dates stay with each routine.</p><button class="text-button" data-action="reset-weekdays">Restore original weekdays</button></div></details><p class="schedule-guidance">Rescheduling does not assess recovery. Review the changed order with your coach; keep the prescribed rests and recovery days.</p>'+(warning?'<p class="schedule-warning" role="status">Strength sessions are on consecutive weekdays. Review recovery spacing with your coach before training.</p><a class="text-button" href="https://sportsmedicine.mayoclinic.org/news/weight-training-dos-and-donts-of-proper-technique/" target="_blank" rel="noopener noreferrer">Recovery guidance ↗</a>':'')+'</section>';
+    return '<div class="schedule-status"><div class="schedule-status-top"><div class="schedule-current"><span>Routine</span><strong>'+esc(routineName(state.day))+'</strong><span>Scheduled for</span><strong>'+esc(calendarLabel(scheduledDay()))+'</strong></div><button class="text-button" data-action="reset-weekdays">Restore original weekdays</button></div><p class="day-plan-help">Click a weekday to choose its training plan.</p><p class="schedule-guidance">Rescheduling does not assess recovery. Review the changed order with your coach; keep the prescribed rests and recovery days.</p>'+(warning?'<p class="schedule-warning" role="status">Strength sessions are on consecutive weekdays. Review recovery spacing with your coach before training.</p><a class="text-button" href="https://sportsmedicine.mayoclinic.org/news/weight-training-dos-and-donts-of-proper-technique/" target="_blank" rel="noopener noreferrer">Recovery guidance ↗</a>':'')+'</div>';
+  }
+  function positionDayMenu(){
+    const menu=$('#day-plan-menu'),anchor=$('[data-calendar-day="'+openDayMenu+'"]');
+    if(!menu?.getBoundingClientRect||!anchor?.getBoundingClientRect)return;
+    const rect=anchor.getBoundingClientRect(),box=menu.getBoundingClientRect();
+    const width=document.documentElement.clientWidth,height=window.innerHeight;
+    const below=height-rect.bottom,above=rect.top;
+    const top=below<box.height&&above>below?rect.top-box.height-6:rect.bottom+6;
+    menu.style.left=Math.max(8,Math.min(rect.left,width-box.width-8))+'px';
+    menu.style.top=Math.max(8,Math.min(top,height-box.height-8))+'px';
+  }
+  function closeDayMenu(restoreFocus=false){
+    const day=openDayMenu;openDayMenu=null;
+    const menu=$('#day-plan-menu');if(menu?.remove)menu.remove();
+    document.querySelectorAll('[data-calendar-day]').forEach(button=>button.setAttribute('aria-expanded','false'));
+    if(restoreFocus)$('[data-calendar-day="'+day+'"]')?.focus();
+  }
+  function openRoutineMenu(calendar){
+    if(state.week%2!==0||!window.RoundworkSchedule.ids.includes(calendar))return;
+    const next=openDayMenu===calendar?null:calendar;
+    state.day=weekSchedule()[calendar];openDayMenu=next;
+    persist();render();
+    if(next)$('#day-plan-menu [aria-checked="true"]')?.focus();
+    else $('[data-calendar-day="'+calendar+'"]')?.focus();
+  }
+  function assignDayPlan(calendar,routine){
+    const S=window.RoundworkSchedule;
+    if(state.week%2!==0||!S.ids.includes(calendar)||!S.ids.includes(routine))return;
+    state.schedules[state.week]=S.move(weekSchedule(),routine,calendar);
+    state.day=routine;openDayMenu=null;
+    persist();render();$('[data-calendar-day="'+calendar+'"]')?.focus();
+    toast('Schedule updated. Completed work stays with its routine.');
   }
   function changeSchedule(action,target){
     if(state.week%2!==0)return;
@@ -209,7 +241,6 @@
   function heroArt() { return '<svg class="hero-art" viewBox="0 0 180 220" fill="none" aria-hidden="true"><circle cx="93" cy="40" r="16" stroke="#d7df75" stroke-width="7"/><path d="M85 61 70 111 104 129 111 177M70 111 44 160 29 204M86 73 119 91 139 55M78 77 50 96 30 69M102 130 129 168 160 174" stroke="#d7df75" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="m24 65 11-7 11 13-11 9ZM135 40l15 7-5 19-16-6Z" fill="#eb5227"/></svg>'; }
   function weekSelect() { return `<div class="week-selector-wrap"><label class="form-label" for="week-select">Your training block</label><select id="week-select" class="week-selector">${Array.from({length:8},(_,i) => `<option value="${i+1}" ${state.week===i+1?'selected':''}>Week ${i+1} · ${i%2===0?'Lifting':'Boxing'}</option>`).join('')}</select></div>`; }
   function render() {
-    const scheduleEditorOpen=$('#schedule-editor')?.open;
     const openHistory=[...document.querySelectorAll('.routine-history details[open]')].length>0;
     const openEquipmentMenus=[...document.querySelectorAll('[data-equipment-menu][open]')].map(el=>({slot:el.dataset.equipmentMenu,exercise:el.dataset.equipmentExercise}));
     document.querySelectorAll('[data-tab]').forEach(button => { const selected = button.dataset.tab === activeTab; button.classList.toggle('active',selected); if (selected) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current'); });
@@ -221,9 +252,9 @@
     else if (activeTab === 'exercises') renderLibrary();
     else if (activeTab === 'sources') renderSources();
     else renderGym();
-    if(scheduleEditorOpen&&$('#schedule-editor'))$('#schedule-editor').open=true;
     if(openHistory&&$('.routine-history details'))$('.routine-history details').open=true;
     openEquipmentMenus.forEach(menu=>{const el=$('[data-equipment-menu="'+menu.slot+'"]');if(el?.dataset.equipmentExercise===menu.exercise)el.open=true;});
+    if(openDayMenu)positionDayMenu();
     updateSaveStatus();
   }
   function sidebar() {
@@ -254,7 +285,7 @@
   }
   function renderPlan() {
     const review = DATA.review || {summary:'A foundation programme for boxing, built around recovery and coached practice.',points:[]};
-    main.innerHTML = `<div class="page-intro"><div><div class="page-kicker">THE BIG PICTURE</div><h1 class="page-title">Built for the<br>long round<span style="color:var(--orange)">.</span></h1><p class="page-description">Alternate the emphasis. Keep your lifting intact. Progress the boxing work with intent.</p></div><span class="pill">8 WEEKS · 4 BOXING BLOCKS</span></div><div class="week-cards"><section class="week-card"><div class="eyebrow">WEEKS 1 / 3 / 5 / 7</div><h2>Your lifting week.</h2><p>Chest + back → legs → shoulders + arms → repeat. Keep the lifting routine you already know. Thursday and Saturday boxing coaching continue, in separate sessions when needed.</p><span class="pill">EXISTING PROGRAMME UNCHANGED</span></section><section class="week-card dark"><div class="eyebrow">WEEKS 2 / 4 / 6 / 8</div><h2>Your boxing week.</h2><p>Default schedule. Use Adapt this week to move sessions.</p><p>Monday: power + strength + sled. Tuesday: technique + aerobic work + optional ropes. Wednesday: power + strength. Thursday and Saturday: coaching. Friday and Sunday: recover.</p><span class="pill">POWER → STRENGTH → CONDITIONING</span></section></div><section class="section-space"><div class="section-heading"><h2>The balance, reviewed.</h2><span>QUALITY COMES FIRST</span></div><p class="page-description">${esc(review.summary)}</p><div class="review-grid">${review.points.map((point,i) => `<div class="review-item"><span class="review-num">0${i+1} / TRAINING PRINCIPLE</span>${esc(typeof point==='string'?point.startsWith('All boxing-week sessions are under 105')?'Select 30–120 minutes for a boxing-focused gym day. The planner fits work and recovery inside that budget; lifting stays unchanged and coaching remains coach-led.':point:point.text || point.detail || '')}</div>`).join('')}</div></section><section class="section-space"><div class="section-heading"><h2>Progress without rushing.</h2><span>THE DOSES UPDATE WITH YOUR WEEK</span></div><div class="progression-grid">${(DATA.progression || []).map(p => `<article class="progression-card"><div class="eyebrow">WEEK ${esc(p.week)}</div><h3>${esc(p.title)}</h3><p>${esc(p.detail)}</p></article>`).join('')}</div><div class="notice"><div><strong>Progress is earned, not automatic.</strong>The later weeks show planned increases. Stay on an earlier week if technique, recovery, or coaching quality declines. Week 8 consolidates; it is not a test week.</div></div></section><section class="section-space"><div class="section-heading"><h2>Coaching stays at the centre.</h2></div><p class="page-description">This is a gym foundation, not a fight camp or a clearance to compete. Ask your coach to review your gym workload, shadowboxing themes, and tournament readiness. Demonstrations are simplified visual cues; use an in-person demonstration for unfamiliar movements.</p></section><section class="section-space"><div class="section-heading"><h2>Where the plan comes from.</h2><span>EXPERT SOURCES + PROGRAMMING JUDGEMENT</span></div><div class="sources-list">${(DATA.sources || []).map(s => `<a class="source-item" href="${safeUrl(s.url)}" target="_blank" rel="noopener noreferrer"><strong>${esc(s.label)} ↗</strong><p>${esc(s.note || '')}</p></a>`).join('')}</div></section>`;
+    main.innerHTML = `<div class="page-intro"><div><div class="page-kicker">THE BIG PICTURE</div><h1 class="page-title">Built for the<br>long round<span style="color:var(--orange)">.</span></h1><p class="page-description">Alternate the emphasis. Keep your lifting intact. Progress the boxing work with intent.</p></div><span class="pill">8 WEEKS · 4 BOXING BLOCKS</span></div><div class="week-cards"><section class="week-card"><div class="eyebrow">WEEKS 1 / 3 / 5 / 7</div><h2>Your lifting week.</h2><p>Chest + back → legs → shoulders + arms → repeat. Keep the lifting routine you already know. Thursday and Saturday boxing coaching continue, in separate sessions when needed.</p><span class="pill">EXISTING PROGRAMME UNCHANGED</span></section><section class="week-card dark"><div class="eyebrow">WEEKS 2 / 4 / 6 / 8</div><h2>Your boxing week.</h2><p>Default schedule. Click a weekday in Session to choose its training plan.</p><p>Monday: power + strength + sled. Tuesday: technique + aerobic work + optional ropes. Wednesday: power + strength. Thursday and Saturday: coaching. Friday and Sunday: recover.</p><span class="pill">POWER → STRENGTH → CONDITIONING</span></section></div><section class="section-space"><div class="section-heading"><h2>The balance, reviewed.</h2><span>QUALITY COMES FIRST</span></div><p class="page-description">${esc(review.summary)}</p><div class="review-grid">${review.points.map((point,i) => `<div class="review-item"><span class="review-num">0${i+1} / TRAINING PRINCIPLE</span>${esc(typeof point==='string'?point.startsWith('All boxing-week sessions are under 105')?'Select 30–120 minutes for a boxing-focused gym day. The planner fits work and recovery inside that budget; lifting stays unchanged and coaching remains coach-led.':point:point.text || point.detail || '')}</div>`).join('')}</div></section><section class="section-space"><div class="section-heading"><h2>Progress without rushing.</h2><span>THE DOSES UPDATE WITH YOUR WEEK</span></div><div class="progression-grid">${(DATA.progression || []).map(p => `<article class="progression-card"><div class="eyebrow">WEEK ${esc(p.week)}</div><h3>${esc(p.title)}</h3><p>${esc(p.detail)}</p></article>`).join('')}</div><div class="notice"><div><strong>Progress is earned, not automatic.</strong>The later weeks show planned increases. Stay on an earlier week if technique, recovery, or coaching quality declines. Week 8 consolidates; it is not a test week.</div></div></section><section class="section-space"><div class="section-heading"><h2>Coaching stays at the centre.</h2></div><p class="page-description">This is a gym foundation, not a fight camp or a clearance to compete. Ask your coach to review your gym workload, shadowboxing themes, and tournament readiness. Demonstrations are simplified visual cues; use an in-person demonstration for unfamiliar movements.</p></section><section class="section-space"><div class="section-heading"><h2>Where the plan comes from.</h2><span>EXPERT SOURCES + PROGRAMMING JUDGEMENT</span></div><div class="sources-list">${(DATA.sources || []).map(s => `<a class="source-item" href="${safeUrl(s.url)}" target="_blank" rel="noopener noreferrer"><strong>${esc(s.label)} ↗</strong><p>${esc(s.note || '')}</p></a>`).join('')}</div></section>`;
   }
   function renderLibrary() {
     const categories = [...new Set(DATA.exercises.map(e => e.category))];
@@ -359,7 +390,7 @@
     const complete = items.filter(item => state.logs[logKey(state.day,item.exercise)]).length;
     openModal(`${modalHeader('FINISH YOUR SESSION',state.sessions[sessionKey()]?'Your session is recorded.':'Work done. Recover well.')}<div class="modal-content"><p>${complete} of ${items.length} movements marked complete. It is fine to finish with skipped movements—only the exercises you marked are counted.</p><p>${state.readiness==='tired'?'Recovery adjustments were active today.':'Check that your next coached session still feels fresh.'} Session records are manual and stay on this device.</p><div style="display:flex;gap:10px"><button class="button button-ghost" data-close>Back</button><button class="button button-primary" data-action="save-session">${state.sessions[sessionKey()]?'Update record':'Save session'} ✓</button></div></div>`,'finish');
   }
-  function setTab(tab) { if (!['session','plan','exercises','gym','sources'].includes(tab)) return; activeTab=tab; history.replaceState(null,'',`#${tab}`); render(); window.scrollTo({top:0,behavior:'instant'}); }
+  function setTab(tab) { if (!['session','plan','exercises','gym','sources'].includes(tab)) return; closeDayMenu();activeTab=tab; history.replaceState(null,'',`#${tab}`); render(); window.scrollTo({top:0,behavior:'instant'}); }
   function setTimer(duration,label) {
     if (timer.running && !window.confirm(window.RoundworkI18n?.translate('Replace the timer that is currently running?') || 'Replace the timer that is currently running?')) return;
     timer.duration = Math.max(1,Number(duration)||60); timer.remaining=timer.duration; timer.running=false; timer.finished=false; timer.label=label || 'REST TIMER';
@@ -382,15 +413,17 @@
   setInterval(() => {if(timer.running)updateTimer();},200);
   document.addEventListener('visibilitychange',() => {if(!document.hidden)updateTimer();});
   document.addEventListener('click',event => {
+    if(openDayMenu&&!event.target.closest('.day-plan-navigation'))closeDayMenu();
     const button=event.target.closest('button');
     if (event.target.classList.contains('modal-backdrop')) {closeModal();return;}
     if(!button)return;
     if(button.dataset.tab){setTab(button.dataset.tab);return;}
     if(button.dataset.go){closeModal(false);setTab(button.dataset.go);return;}
     if(button.hasAttribute('data-close')){closeModal();return;}
-    if(button.dataset.day){state.day=button.dataset.day;persist();render();return;}
-    if(button.dataset.action==='shift-week'){changeSchedule('shift',$('#schedule-start').value);return;}
-    if(button.dataset.action==='move-routine'){changeSchedule('move',$('#schedule-move-target').value);return;}
+    if(button.hasAttribute('data-close-day-menu')){closeDayMenu(true);return;}
+    if(button.dataset.dayPlanOption){assignDayPlan(button.dataset.planFor,button.dataset.dayPlanOption);return;}
+    if(button.dataset.calendarDay){openRoutineMenu(button.dataset.calendarDay);return;}
+    if(button.dataset.day){closeDayMenu();state.day=button.dataset.day;persist();render();return;}
     if(button.dataset.action==='reset-weekdays'){changeSchedule('reset');return;}
     if(button.dataset.readiness){state.readiness=button.dataset.readiness;persist();render();toast(state.readiness==='tired'?'Recovery adjustments applied.':'Standard session doses restored.');return;}
     if(button.dataset.gear){state.equipment[button.dataset.gear]=button.dataset.value;persist();const y=window.scrollY;render();window.scrollTo(0,y);return;}
@@ -411,7 +444,6 @@
     else if(action==='save-session'){state.sessions[sessionKey()]={at:state.sessions[sessionKey()]?.at || new Date().toISOString(),updatedAt:new Date().toISOString(),readiness:state.readiness,coachLoad:state.coachLoad,settings:sessionChoice(),prescription:currentSession().items.map(item=>({exercise:item.exercise,selected:exerciseFor(item).id,dose:getDose(item,exerciseFor(item))}))};persist();closeModal();render();toast('Session saved on this device.');}
   });
   document.addEventListener('change',event => {
-    if(event.target.id==='schedule-move-target'){const destination=weekSchedule()[event.target.value];$('#schedule-move-preview').innerHTML=event.target.value===scheduledDay()?'Already on this weekday.':'<span>Exchanges with</span>: <strong>'+esc(routineName(destination))+'</strong>';return;}
     if(event.target.dataset?.equipmentItem){setCardEquipment(event.target.dataset.equipmentSlot,event.target.dataset.equipmentItem,event.target.checked);}
     else if(event.target.dataset?.equipmentReady){setEquipmentReady(event.target.dataset.equipmentReady,event.target.checked);}
     else if(event.target.dataset?.complete){setExerciseComplete(event.target.dataset.complete,event.target.checked);}
@@ -423,7 +455,7 @@
       if(id==='progression-ready')choice.progressionReady=event.target.checked;
       state.sessionSettings[sessionKey()]=window.RoundworkPlanner.cleanChoice(choice,state.day);persist();render();$('#'+id)?.focus();toast('Session updated. Keep the prescribed rests; completed work remains recorded.');
     }
-    else if(event.target.id==='week-select'){state.week=Number(event.target.value);persist();render();}
+    else if(event.target.id==='week-select'){openDayMenu=null;state.week=Number(event.target.value);persist();render();}
     else if(event.target.id==='coach-load'){state.coachLoad=event.target.value;persist();render();}
     else if(event.target.id==='category-filter'){libraryCategory=event.target.value;renderLibraryResults();}
   });
@@ -432,6 +464,15 @@
     else if(event.target.id==='gym-notes'){state.notes=event.target.value;persist();}
   });
   document.addEventListener('keydown',event => {
+    if(openDayMenu){
+      if(event.key==='Escape'){event.preventDefault();closeDayMenu(true);return;}
+      const options=[...document.querySelectorAll('[data-day-plan-option]')],index=options.indexOf(event.target);
+      if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){
+        event.preventDefault();const target=event.key==='Home'?0:event.key==='End'?options.length-1:(index+(event.key==='ArrowDown'?1:-1)+options.length)%options.length;
+        options[target]?.focus();return;
+      }
+      if(event.key==='Tab'){closeDayMenu(true);return;}
+    }
     if(!modal)return;
     if(event.key==='Escape'){event.preventDefault();closeModal();return;}
     if(event.key==='Tab'){
@@ -442,6 +483,8 @@
       else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
     }
   });
+  window.addEventListener?.('resize',()=>{if(openDayMenu)positionDayMenu();});
+  document.addEventListener('scroll',()=>{if(openDayMenu)positionDayMenu();},true);
   document.addEventListener('roundwork-language',()=>{if(activeTab==='session')render();});
   $('#help-button').addEventListener('click',() => openModal(`${modalHeader('ROUNDWORK','A clear plan for the gym.')}<div class="modal-content"><p>Start with Week 2, confirm the equipment in <strong>My gym</strong>, and tell the app how demanding your coached sessions are. Every gym movement opens with illustrated mechanics and written steps. Expand the video demonstration for a fuller view.</p><p>Weeks 1, 3, 5, and 7 preserve your existing lifting routine. Weeks 2, 4, 6, and 8 provide the boxing-focused sessions. Coaching is Thursday and Saturday.</p><p>Week and day choices are manual. Nothing is inferred from today’s date. Saved equipment, notes, substitutions, and training marks stay in this browser on this device.</p><button class="button button-primary" data-close>Ready to go ↗</button></div>`,'about'));
   document.addEventListener('roundwork-language',() => { if (activeTab==='exercises') renderLibraryResults(); });

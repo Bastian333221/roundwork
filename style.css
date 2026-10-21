@@ -56,16 +56,8 @@
 .equipment-check-item:focus-within {outline:2px solid var(--orange);outline-offset:2px}
 
 .day-tab .day-routine {display:block;margin-top:5px;font-size:10px;line-height:1.3;letter-spacing:0;white-space:normal}
-.week-schedule {margin:16px 0 20px;border:1px solid var(--line);border-radius:16px;background:#fafaf5;padding:18px}
 .schedule-current {display:flex;flex-wrap:wrap;gap:6px 10px;font-size:12px;line-height:1.6;margin-bottom:12px}
 .schedule-current>span {color:var(--muted)}
-.week-schedule summary {cursor:pointer;font-size:14px;font-weight:700;min-height:44px;padding:10px 0}
-.schedule-editor-body {padding:12px 0 0}
-.schedule-controls {display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.schedule-controls select {width:100%;min-height:48px;margin:0 0 10px}
-.schedule-controls .button {width:100%;min-height:48px}
-.week-schedule p {font-size:12px;line-height:1.6;margin:12px 0}
-.week-schedule .schedule-guidance {color:var(--muted);margin-bottom:0}
 .schedule-warning {padding:12px;border-left:3px solid var(--orange);background:#faebe2}
 .routine-history {margin-top:22px;padding:20px;border:1px solid var(--line);border-radius:14px;background:#fafaf5}
 .routine-history h3 {margin:0 0 12px;font-size:17px}
@@ -74,4 +66,22 @@
 .routine-history ul {list-style:none;padding:0;margin:8px 0 0}
 .routine-history li {display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:10px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.5}
 .routine-history time {color:var(--muted)}
-@media(max-width:600px){.schedule-controls {grid-template-columns:1fr}.schedule-controls select {font-size:16px}.week-schedule {padding:15px}.schedule-current {display:grid;grid-template-columns:auto 1fr}.day-tab .day-routine {font-size:9px}}
+.day-plan-navigation {position:relative}
+.day-tab {position:relative}
+.day-tab[aria-expanded="true"] {outline:2px solid var(--orange);outline-offset:2px}
+.day-plan-menu {position:fixed;z-index:200;width:300px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);overflow:auto;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;background:#fafaf5;box-shadow:0 12px 32px #16241b33;padding:8px}
+.day-plan-menu-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 6px;font-size:14px}
+.day-plan-menu-heading .icon-button {min-width:44px;min-height:44px}
+.day-plan-menu>p {font-size:11px;line-height:1.5;color:var(--muted);margin:0 6px 8px}
+.day-plan-option {display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;text-align:left;border:0;background:transparent;color:var(--ink);border-radius:7px;padding:10px;font:inherit;font-size:13px;line-height:1.4;cursor:pointer}
+.day-plan-option[aria-checked="true"] {background:#e9eddb;font-weight:700}
+.day-plan-option small {font-size:10px;font-weight:400;color:var(--muted)}
+.day-plan-option:hover {background:#f5e8de}
+.day-plan-option:focus-visible {outline:2px solid var(--orange);outline-offset:-2px}
+.schedule-status {margin:16px 0 20px}
+.schedule-status-top {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px}
+.schedule-status .schedule-current {margin:0}
+.schedule-status p {font-size:12px;line-height:1.6;margin:8px 0}
+.schedule-status .schedule-guidance {color:var(--muted)}
+.day-plan-help {font-weight:600}
+@media(max-width:600px){.schedule-status .schedule-current {display:grid;grid-template-columns:auto 1fr;gap:4px 8px}.day-plan-menu {width:300px}}
