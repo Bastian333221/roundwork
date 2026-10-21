@@ -1,4 +1,4 @@
-# ROUNDWORK 1.7.0
+# ROUNDWORK 1.8.0
 
 Boxing gym sessions include a Choose movement dropdown inside every exercise card, beside its timers and guide, with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. A Done checkbox in each card saves its actual movement and dose in the selected week/day log. Uncheck to undo completion. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 
@@ -49,3 +49,9 @@ Friday/Sunday workouts have separate stable routine IDs and use the existing ski
 Log combines all recorded routines within a selected training week, with an All training weeks filter. Each entry shows its recording dates, saved/partial status, completed exercises and saved prescriptions. Start another session archives the current attempt and opens a new attempt with separate completion and equipment confirmations, preserving movement choices, level and time. Old logs migrate without inventing completion dates. Session instances and active attempt links are included in backup/import. Prescriptions are not measured weights, repetitions or training duration.
 
 Run node tests/check-history.cjs for migration, repeated-session, weekly-summary and backup regressions.
+
+## Actual performance and past sessions
+
+Record actuals on an exercise to enter individual sets, weight, kg/lb, load basis and repetitions. Optional time, distance and notes support timed work or resistance that cannot be quantified. Values are self-reported and remain separate from the prescription. Saving marks that exercise as performed without changing equipment confirmations. Log supports comparisons for the same exercise and displays the original units and load basis. Add past session lets the user select the routine, numbered training week and actual calendar date, then mark remembered exercises and enter optional actuals. No performed values or historical prescriptions are inferred. Manual entries can be edited independently of the active routine, and all entries are included in backups.
+
+Run node tests/check-performance.cjs for actual-load, manual-session, date, comparison and persistence regressions.

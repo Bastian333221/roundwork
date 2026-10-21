@@ -19,15 +19,15 @@ window.RoundworkHistory=(()=>{
   function cleanRecord(value,id){
     if(!object(value)||!idPattern.test(id)||!keyPattern.test(value.week+':'+value.routine))return null;
     const week=Number(value.week),routine=value.routine;
-    const rawExercises=(Array.isArray(value.exercises)?value.exercises:[]).filter(x=>object(x)&&known(x.slot)&&known(x.exercise)).map(x=>({slot:x.slot,exercise:x.exercise,at:date(x.at),settings:object(x.settings)?window.RoundworkPlanner.cleanChoice(x.settings,routine):null,dose:dose(x.dose)}));
+    const rawExercises=(Array.isArray(value.exercises)?value.exercises:[]).filter(x=>object(x)&&(known(x.slot)||value.source==='manual'&&/^extra-\d+$/.test(x.slot))&&known(x.exercise)).map(x=>({slot:x.slot,exercise:x.exercise,at:date(x.at),settings:object(x.settings)?window.RoundworkPlanner.cleanChoice(x.settings,routine):null,dose:dose(x.dose),actual:window.RoundworkPerformance?.actual(x.actual)||null}));
     const exercises=[...new Map(rawExercises.map(item=>[item.slot,item])).values()];
     const prescription=(Array.isArray(value.prescription)?value.prescription:[]).filter(x=>object(x)&&known(x.exercise)&&known(x.selected)).map(x=>({exercise:x.exercise,selected:x.selected,dose:dose(x.dose)}));
-    return {id,week,routine,title:text(value.title,200),scheduledDay:window.RoundworkSchedule.ids.includes(value.scheduledDay)?value.scheduledDay:null,firstRecordedAt:date(value.firstRecordedAt),updatedAt:date(value.updatedAt),finishedAt:date(value.finishedAt),closedAt:date(value.closedAt),settings:object(value.settings)?window.RoundworkPlanner.cleanChoice(value.settings,routine):null,readiness:['normal','tired'].includes(value.readiness)?value.readiness:null,coachLoad:['unknown','technical','hard'].includes(value.coachLoad)?value.coachLoad:null,prescription,exercises,equipmentChecks:window.RoundworkChoices.cleanEquipmentChecks(value.equipmentChecks)};
+    return {id,week,routine,title:text(value.title,200),source:value.source==='manual'?'manual':'app',performedDate:window.RoundworkPerformance?.dateOnly(value.performedDate)||null,enteredAt:date(value.enteredAt),scheduledDay:window.RoundworkSchedule.ids.includes(value.scheduledDay)?value.scheduledDay:null,firstRecordedAt:date(value.firstRecordedAt),updatedAt:date(value.updatedAt),finishedAt:date(value.finishedAt),closedAt:date(value.closedAt),settings:object(value.settings)?window.RoundworkPlanner.cleanChoice(value.settings,routine):null,readiness:['normal','tired'].includes(value.readiness)?value.readiness:null,coachLoad:['unknown','technical','hard'].includes(value.coachLoad)?value.coachLoad:null,prescription,exercises,equipmentChecks:window.RoundworkChoices.cleanEquipmentChecks(value.equipmentChecks)};
   }
   function hasWork(state,key){return !!state.sessions?.[key]||Object.keys(state.logs||{}).some(k=>k.startsWith(key+':'));}
   function capture(state,key,id,meta={},previous){
     const [week,routine]=key.split(':'),session=state.sessions?.[key];
-    const exercises=Object.entries(state.logs||{}).filter(([k,v])=>k.startsWith(key+':')&&object(v)).map(([k,v])=>({slot:k.slice(key.length+1),exercise:v.exercise||v.selected||k.slice(key.length+1),at:v.at,settings:v.settings,dose:v.dose}));
+    const exercises=Object.entries(state.logs||{}).filter(([k,v])=>k.startsWith(key+':')&&object(v)).map(([k,v])=>({slot:k.slice(key.length+1),exercise:v.exercise||v.selected||k.slice(key.length+1),at:v.at,settings:v.settings,dose:v.dose,actual:v.actual}));
     const dates=[...exercises.map(x=>date(x.at)),date(session?.at)].filter(Boolean).sort((a,b)=>new Date(a)-new Date(b));
     const day=window.BOXING_DATA.days.find(d=>d.id===routine);
     const title=window.RoundworkSchedule.routine(day,{week:Number(week),recoveryDays:state.recoveryDays}).title;
@@ -76,7 +76,7 @@ window.RoundworkHistory=(()=>{
     state.activeSessions={...state.activeSessions,[key]:newId(state)};
   }
   function records(state,week='all'){
-    return Object.values(state.sessionHistory||{}).filter(record=>week==='all'||record.week===Number(week)).sort((a,b)=>(new Date(b.firstRecordedAt||0)-new Date(a.firstRecordedAt||0))||b.id.localeCompare(a.id));
+    return Object.values(state.sessionHistory||{}).filter(record=>week==='all'||record.week===Number(week)).sort((a,b)=>(b.performedDate||b.firstRecordedAt||'').localeCompare(a.performedDate||a.firstRecordedAt||'')||b.id.localeCompare(a.id));
   }
   const pairs=[
     ['Log','Registro'],['Training log','Registro de entrenamiento'],['Weekly overview','Resumen semanal'],['All training weeks','Todas las semanas de entrenamiento'],['Training week','Semana de entrenamiento'],
@@ -98,5 +98,5 @@ window.RoundworkHistory=(()=>{
   for(let week=1;week<=8;week++)pairs.push(['Week '+week,'Semana '+week]);
   for(const [en,es] of pairs)window.ROUNDWORK_ES[en]=es;
   window.ROUNDWORK_HISTORY_TEXT=pairs.map(pair=>pair[0]);
-  return {cleanRecord,restore,hasWork,checkpoint,startAnother,records};
+  return {cleanRecord,restore,hasWork,checkpoint,startAnother,records,newId};
 })();
