@@ -1,4 +1,4 @@
-# ROUNDWORK 1.4.5
+# ROUNDWORK 1.5.0
 
 Boxing gym sessions include a Choose movement dropdown inside every exercise card, beside its timers and guide, with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. A Done checkbox in each card saves its actual movement and dose in the selected week/day log. Uncheck to undo completion. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 
@@ -39,3 +39,5 @@ Run `node tests/check-app.cjs`, `node tests/check-language.cjs` and `node tests/
 Static HTML/CSS/JavaScript with no build dependencies. Serve this directory with a local HTTP server. All paths are relative for GitHub Pages hosting. Do not publish exported personal workout backups.
 
 Each exercise card has independent equipment confirmation for its selected movement, week and day. Equipment ready selects all required items on that card; expand Equipment checklist to select individual items. Checks never select another card or change My gym inventory. Changing the movement clears its card checklist; completed logs are preserved. Backup/import includes these checks. Equipment-free exercises show a checked, disabled control.
+
+Flexible boxing-week schedule: the weekday tabs show assigned routines. Adapt this week offers a full-week rotation anchored to Power & strength A, or an exchange between the selected routine and another weekday. Coaching and recovery move too. The mapping is saved independently for each boxing week. Routine IDs and existing log keys remain stable, preserving exercises, doses, equipment checks, settings, and original completion timestamps. Routine record displays completion dates from existing records. Restore original weekdays only resets assignments. Backup/import includes validated schedules. Rescheduling does not assess recovery; consecutive strength weekdays display a coach-review warning with a Mayo Clinic reference.

@@ -3,8 +3,8 @@ const base=path.join(__dirname,'..');let checks=0,plans=0;const ok=(v,msg)=>{ass
 const noop=()=>{},elements=new Map();const get=key=>{if(!elements.has(key))elements.set(key,{addEventListener:noop,classList:{add:noop,remove:noop,toggle:noop},setAttribute:noop,focus:noop,textContent:'',innerHTML:'',hidden:false});return elements.get(key);};
 const events={},saved={};const document={body:{style:{}},getElementById:get,querySelector:get,querySelectorAll:()=>[],addEventListener:(name,handler)=>events[name]=handler};
 const ctx={window:{scrollTo:noop},document,localStorage:{getItem:()=>null,setItem:(key,value)=>saved[key]=value},location:{hash:''},history:{replaceState:noop},setInterval:noop,clearInterval:noop,setTimeout:noop,clearTimeout:noop,console,URL,Date,Map,Set,navigator:{}};
-vm.createContext(ctx);for(const f of ['data.js','es.js','es-ui.js','evidence.js','videos.js','planner.js','planner-ui.js','choices.js'])vm.runInContext(fs.readFileSync(path.join(base,f),'utf8'),ctx);
-let app=fs.readFileSync(path.join(base,'app.js'),'utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/,'  window.test={getDose,currentSession,sessionOptions,exerciseCard,renderSession,movementSelect,chooseMovement,getState:()=>state,setState:s=>{state={...baseState,equipmentChecks:{},...s}}};\n})();');vm.runInContext(app,ctx);
+vm.createContext(ctx);for(const f of ['data.js','es.js','es-ui.js','evidence.js','videos.js','planner.js','planner-ui.js','choices.js','schedule.js'])vm.runInContext(fs.readFileSync(path.join(base,f),'utf8'),ctx);
+let app=fs.readFileSync(path.join(base,'app.js'),'utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/,'  window.test={getDose,currentSession,sessionOptions,exerciseCard,renderSession,movementSelect,chooseMovement,weekSchedule,scheduledDay,changeSchedule,scheduleTabs,routineHistory,getState:()=>state,setState:s=>{state={...baseState,equipmentChecks:{},schedules:{},...s}}};\n})();');vm.runInContext(app,ctx);
 const D=ctx.window.BOXING_DATA,P=ctx.window.RoundworkPlanner,T=ctx.window.test,before=JSON.stringify(D);
 const allYes=Object.fromEntries(D.equipment.map(e=>[e.id,'yes']));
 const gearCases=[allYes,{},Object.fromEntries(D.equipment.map(e=>[e.id,'no'])),{floor:'yes',mat:'yes',bands:'yes',bandAnchor:'yes',ropes:'no',sled:'no',step:'no',dumbbells:'no',bench:'no',cable:'no',pulldown:'no',bike:'yes'}];
@@ -34,7 +34,7 @@ for(const day of ['thu','sat'])for(const minutes of P.times){T.setState({week:2,
 for(const day of ['fri','sun']){T.setState({week:2,day,sessionSettings:{['2:'+day]:{level:'advanced',minutes:120}}});p=T.currentSession();ok(p.kind==='rest'&&p.minutes===0&&p.items[0].exercise==='rest','Two-hour choice preserves rest');}
 const clean=P.cleanSettings({'2:mon':{level:'unsafe',minutes:999,progressionReady:'true'},bad:{level:'advanced',minutes:120},'6:tue':{level:'rookie',minutes:45,progressionReady:true}});ok(Object.keys(clean).length===2&&clean['2:mon'].level==='intermediate'&&clean['2:mon'].minutes===105&&!clean['2:mon'].progressionReady,'Invalid settings safely normalised');ok(clean['6:tue'].minutes===45&&clean['6:tue'].level==='rookie','Valid backup choices retained');
 ok(JSON.stringify(D)===before,'Canonical routine never mutated');
-const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(index.indexOf('planner-ui.js')<index.indexOf('i18n.js'),'Planning translations load before translator');ok(sw.includes('planner.js?v=1.4.5')&&sw.includes('planner-ui.js?v=1.4.5'),'Adaptive code available offline');
+const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(index.indexOf('planner-ui.js')<index.indexOf('i18n.js'),'Planning translations load before translator');ok(sw.includes('planner.js?v=1.5.0')&&sw.includes('planner-ui.js?v=1.5.0'),'Adaptive code available offline');
 const mobile=fs.readFileSync(path.join(base,'mobile.js'),'utf8');ok(mobile.includes('cleanSettings(x.sessionSettings)'),'Import preserves sanitised day settings');
 for(const day of D.days){T.setState({week:2,day:day.id});T.renderSession();ok(get('main').innerHTML.includes('id="level-select"')&&get('main').innerHTML.includes('id="duration-select"'),'Both day menus rendered '+day.id);}
 T.setState({week:2,day:'mon',equipment:allYes,coachLoad:'technical'});events.change({target:{id:'duration-select',value:'45'}});events.change({target:{id:'level-select',value:'rookie'}});ok(T.currentSession().choice.level==='rookie'&&T.currentSession().choice.minutes===45,'Control events replan current day');ok(JSON.parse(saved['roundwork.v1']).sessionSettings['2:mon'].minutes===45,'Per-day choices persisted');
@@ -83,7 +83,7 @@ configured('mon','rookie');T.chooseMovement('warmup','warmRope');ok(T.currentSes
 configured('mon','intermediate',30,{swaps:{'2:mon:pallof':'birdDog'}});T.renderSession();ok(!get('main').innerHTML.includes('data-movement="pallof"'),'Omitted slot has no detached selector');ok(T.getState().swaps['2:mon:pallof']==='birdDog','Omitted choice stays saved');
 for(const [id,role] of Object.entries(C.trunkRoles)){ok(D.exercises.some(e=>e.id===id)&&role.length>0,'Known abdominal role '+id);}
 ok(JSON.stringify(D)===before,'Options never mutate routine or library after loading');
-ok(sw.includes('choices.js?v=1.4.5')&&sw.includes('choices-diagrams.js?v=1.4.5'),'New guides and selection code cached offline');
+ok(sw.includes('choices.js?v=1.5.0')&&sw.includes('choices-diagrams.js?v=1.5.0'),'New guides and selection code cached offline');
 console.log(checks+' full-app choice checks passed across '+plans+' baseline and '+optionPlans+' exercise-selection plans.');
 
 configured('mon','intermediate',120);T.renderSession();
@@ -175,3 +175,48 @@ ok(Object.keys(cleaned).length===2&&cleaned['2:mon:warmup'].items.floor===true&&
 ok(!Object.hasOwn(cleaned['2:mon:warmup'].items,'sled')&&!Object.keys(cleaned['4:tue:warmup'].items).length,'Backup rejects unrelated gear and non-boolean checks');
 ok(mobile.includes('cleanEquipmentChecks(x.equipmentChecks)'),'Cross-device backup import includes independent checklists');
 console.log('Independent equipment checklist regressions passed: adjacent cards, partial checks, day/week isolation, persistence, completion, substitutions and backup validation.');
+
+const S=ctx.window.RoundworkSchedule,same=(a,b)=>JSON.stringify(a)===JSON.stringify(b),ids=S.ids;
+const identity=S.identity();
+for(const start of ids){
+  const shifted=S.shift(identity,start);
+  ok(S.calendarDay(shifted,'mon')===start,'Shift anchors first strength routine on '+start);
+  ok(new Set(Object.values(shifted)).size===7,'Shift preserves all seven routines '+start);
+  ok(!S.consecutiveStrength(shifted),'Rotation preserves strength spacing '+start);
+  for(const routine of ids)for(const target of ids){
+    const moved=S.move(shifted,routine,target);
+    ok(S.calendarDay(moved,routine)===target,'Individual move destination '+routine+target);
+    ok(new Set(Object.values(moved)).size===7,'Move does not lose or duplicate routines');
+  }
+}
+ok(same(identity,S.identity()),'Pure schedule operations preserve input');
+ok(S.consecutiveStrength(S.move(identity,'wed','tue')),'Consecutive strength sessions detected');
+ok(same(S.mapping({mon:'mon',tue:'mon'}),identity),'Incomplete or duplicate schedules fall back to baseline');
+const cleanSchedules=S.cleanSchedules({'2':S.shift(identity,'tue'),'4':{mon:'bad'},'1':identity,'9':identity});
+ok(Object.keys(cleanSchedules).length===2&&cleanSchedules['2'].tue==='mon'&&same(cleanSchedules['4'],identity),'Backup validates boxing weeks and full schedule permutations');
+ok(S.dateLabel('2026-10-20T16:00:00-05:00','en').includes('2026')&&S.dateLabel('2026-10-20T16:00:00-05:00','es')!==S.dateLabel('2026-10-20T16:00:00-05:00','en'),'Completion dates are localized');
+ok(S.dateLabel(null)===null&&S.dateLabel('bad')===null,'Missing dates are not invented');
+
+const actual='2026-10-20T16:00:00-05:00';
+configured('mon','intermediate',120,{logs:{'2:mon:cooldown':{exercise:'cooldown',at:actual,dose:{sets:1,seconds:180}}},sessions:{'2:mon':{at:actual}},swaps:{'2:mon:warmup':'warmRope'},equipmentChecks:{'2:mon:warmup':{exercise:'warmRope',items:{jumpRope:true,floor:true}}}});
+const recordsBefore=JSON.stringify(Object.fromEntries(['logs','sessions','swaps','sessionSettings','equipmentChecks'].map(key=>[key,T.getState()[key]])));
+get('#schedule-start').value='tue';
+events.click({target:{classList:{contains:()=>false},closest:()=>({dataset:{action:'shift-week'},hasAttribute:()=>false})}});
+ok(T.getState().day==='mon'&&T.scheduledDay()==='tue','Tuesday start keeps selected routine and moves its tab');
+ok(T.scheduleTabs().includes('data-day="mon" data-calendar-day="tue"'),'Tuesday tab opens original Monday routine');
+ok(T.currentSession().kind==='gym'&&T.currentSession().items[0].selectedExercise.id==='warmRope','Shift retains routine exercise choices');
+ok(T.routineHistory().includes(S.dateLabel(actual)),'Routine history shows actual completion date');
+ok(JSON.parse(saved['roundwork.v1']).schedules['2'].tue==='mon','Week mapping persists');
+get('#schedule-move-target').value='fri';
+events.click({target:{classList:{contains:()=>false},closest:()=>({dataset:{action:'move-routine'},hasAttribute:()=>false})}});
+ok(T.scheduledDay()==='fri'&&T.weekSchedule().tue==='thu','Moving first strength routine to Friday exchanges with coaching A');
+ok(recordsBefore===JSON.stringify(Object.fromEntries(['logs','sessions','swaps','sessionSettings','equipmentChecks'].map(key=>[key,T.getState()[key]]))),'Rescheduling preserves all routine records byte-for-byte');
+events.click({target:{classList:{contains:()=>false},closest:()=>({dataset:{day:'thu'},hasAttribute:()=>false})}});
+ok(T.scheduledDay()==='tue'&&T.currentSession().kind==='coach','Coaching stays coach-led on its moved weekday');
+T.changeSchedule('move','sun');ok(T.scheduledDay()==='sun'&&T.currentSession().kind==='coach','Coaching can move again');
+const retained=T.getState().schedules;
+T.setState({week:4,day:'mon',schedules:retained});ok(T.scheduledDay()==='mon','Other training weeks retain independent schedules');
+T.setState({week:2,day:'mon',schedules:retained});T.changeSchedule('reset');ok(same(T.weekSchedule(),identity),'Restore original weekdays restores baseline');
+T.setState({week:1,day:'mon'});T.changeSchedule('shift','tue');ok(!T.getState().schedules['1'],'Scheduling leaves lifting weeks unchanged');
+ok(mobile.includes('cleanSchedules(x.schedules)'),'Backup import restores validated schedules');
+console.log('Flexible schedule regressions passed: rotations, exchanges, movable coaching, stable logs, actual dates, recovery review, week isolation and backup validation.');
