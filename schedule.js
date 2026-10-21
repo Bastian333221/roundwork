@@ -15,6 +15,32 @@ window.RoundworkSchedule=(()=>{
     for(const week of ['2','4','6','8'])if(Object.hasOwn(value,week))out[week]=mapping(value[week]);
     return out;
   }
+  function cleanRecovery(value){
+    const out={};
+    if(!value||typeof value!=='object'||Array.isArray(value))return out;
+    for(const [key,choice] of Object.entries(value))if(/^[2468]:(mon|tue|wed|thu|fri|sat|sun)$/.test(key)&&typeof choice==='boolean')out[key]=choice;
+    return out;
+  }
+  function recoveryChoices(state){
+    const out=cleanRecovery(state.recoveryDays);
+    // Older recorded recovery sessions retain their original meaning.
+    for(const week of [2,4,6,8])for(const id of ['fri','sun']){
+      const key=week+':'+id;
+      const prescription=state.sessions?.[key]?.prescription;
+      if(!Object.hasOwn(out,key)&&(state.logs?.[key+':rest']||(Array.isArray(prescription)&&prescription.some(item=>item?.exercise==='rest'))))out[key]=true;
+    }
+    return out;
+  }
+  function routine(day,state){
+    if(state.week%2!==0)return day;
+    if(state.recoveryDays?.[state.week+':'+day.id]===true){
+      const rest=window.BOXING_DATA.days.find(item=>item.id==='fri');
+      return {...rest,id:day.id,templateId:'fri',title:'Recovery',label:day.label};
+    }
+    if(!['fri','sun'].includes(day.id))return day;
+    const skills=window.BOXING_DATA.days.find(item=>item.id==='tue');
+    return {...skills,id:day.id,templateId:'tue',label:day.label,title:day.id==='fri'?'Skills & aerobic A':'Skills & aerobic B',items:skills.items.filter(item=>!item.conditioning)};
+  }
   const calendarDay=(value,routine)=>ids.find(id=>mapping(value)[id]===routine);
   function move(value,routine,target){
     const out=mapping(value),source=calendarDay(out,routine);
@@ -28,7 +54,8 @@ window.RoundworkSchedule=(()=>{
     const offset=(ids.indexOf(start)-ids.indexOf(calendarDay(current,'mon'))+7)%7;
     return Object.fromEntries(ids.map((id,index)=>[ids[(index+offset)%7],current[id]]));
   }
-  function consecutiveStrength(value){
+  function consecutiveStrength(value,recovery=[]){
+    if(recovery.includes('mon')||recovery.includes('wed'))return false;
     const current=mapping(value),a=ids.indexOf(calendarDay(current,'mon')),b=ids.indexOf(calendarDay(current,'wed'));
     return Math.abs(a-b)===1||Math.abs(a-b)===6;
   }
@@ -37,7 +64,7 @@ window.RoundworkSchedule=(()=>{
     const date=new Date(value);
     return Number.isFinite(date.getTime())?new Intl.DateTimeFormat(language==='es'?'es-CO':'en-US',{weekday:'long',year:'numeric',month:'short',day:'numeric'}).format(date):null;
   }
-  const pairs=[
+  const pairs=[['Two power-and-strength sessions, skills and aerobic options, and two coached sessions. Choose your recovery days. Your lifting weeks stay unchanged.','Dos sesiones de potencia y fuerza, opciones de técnica y trabajo aeróbico y dos sesiones con entrenador. Elige tus días de recuperación. Tus semanas de pesas no cambian.'],["Skills & aerobic A","Técnica y trabajo aeróbico A"],["Skills & aerobic B","Técnica y trabajo aeróbico B"],["Skills A","Técnica A"],["Skills B","Técnica B"],["Recovery","Recuperación"],["Make this a recovery day","Elegir recuperación para este día"],["Resume planned session","Retomar la sesión prevista"],["Recovery is your choice on any day. Friday and Sunday offer skills and easy aerobic work. Available workouts are not a recommendation to train every day.","Puedes elegir recuperación cualquier día. El viernes y el domingo ofrecen técnica y trabajo aeróbico suave. Tener rutinas disponibles no es una recomendación de entrenar todos los días."],["Recovery selected for this routine. Other days and existing records are kept.","Recuperación elegida para esta rutina. Se conservan los otros días y los registros existentes."],["Planned session restored. Existing records are kept.","Sesión prevista restaurada. Se conservan los registros existentes."],["Choose your recovery days; review your total workload with your coach and keep the prescribed rests between sets.","Elige tus días de recuperación; revisa la carga total con tu entrenador y conserva los descansos indicados entre series."],["Monday: power + strength + sled. Tuesday: technique + aerobic work + optional ropes. Wednesday: power + strength. Thursday and Saturday: coaching. Friday and Sunday: optional skills + easy aerobic work. Choose recovery on any day from its menu.","Lunes: potencia + fuerza + trineo. Martes: técnica + trabajo aeróbico + cuerdas opcionales. Miércoles: potencia + fuerza. Jueves y sábado: boxeo. Viernes y domingo: técnica + trabajo aeróbico suave opcionales. Elige recuperación cualquier día desde su menú."],
     ['Choose training plan','Elegir plan de entrenamiento'],['Close menu','Cerrar menú'],['Current plan','Plan actual'],
     ['Choose a routine for this weekday. Its current weekday exchanges routines with this day.','Elige una rutina para este día. Su día actual intercambia rutinas con este día.'],
     ['Click a weekday to choose its training plan.','Pulsa un día de la semana para elegir su plan de entrenamiento.'],
@@ -67,5 +94,5 @@ window.RoundworkSchedule=(()=>{
   ];
   for(const [en,es] of pairs)window.ROUNDWORK_ES[en]=es;
   window.ROUNDWORK_SCHEDULE_TEXT=pairs.map(pair=>pair[0]);
-  return {ids,identity,mapping,cleanSchedules,calendarDay,move,shift,consecutiveStrength,dateLabel};
+  return {ids,identity,mapping,cleanSchedules,cleanRecovery,recoveryChoices,routine,calendarDay,move,shift,consecutiveStrength,dateLabel};
 })();

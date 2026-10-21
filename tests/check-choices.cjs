@@ -8,7 +8,7 @@ let app=fs.readFileSync(path.join(base,'app.js'),'utf8').replace(/  render\(\);\
 const D=ctx.window.BOXING_DATA,P=ctx.window.RoundworkPlanner,T=ctx.window.test,before=JSON.stringify(D);
 const allYes=Object.fromEntries(D.equipment.map(e=>[e.id,'yes']));
 const gearCases=[allYes,{},Object.fromEntries(D.equipment.map(e=>[e.id,'no'])),{floor:'yes',mat:'yes',bands:'yes',bandAnchor:'yes',ropes:'no',sled:'no',step:'no',dumbbells:'no',bench:'no',cable:'no',pulldown:'no',bike:'yes'}];
-for(const week of [2,4,6,8])for(const day of ['mon','tue','wed'])for(const level of P.levels)for(const minutes of P.times)for(const coachLoad of ['unknown','technical','hard'])for(const readiness of ['normal','tired'])for(const equipment of gearCases){
+for(const week of [2,4,6,8])for(const day of ['mon','tue','wed','fri','sun'])for(const level of P.levels)for(const minutes of P.times)for(const coachLoad of ['unknown','technical','hard'])for(const readiness of ['normal','tired'])for(const equipment of gearCases){
   const choice={level,minutes,progressionReady:true};T.setState({week,day,coachLoad,readiness,equipment,sessionSettings:{[week+':'+day]:choice}});const p=T.currentSession();plans++;
   const label=JSON.stringify({week,day,level,minutes,coachLoad,readiness,equipment});
   ok(p.minutes<=minutes,'Budget overflow '+label);ok(p.items[0].exercise==='warmup'&&p.items[0].adaptedDose.seconds>=480,'Warm-up protected '+label);ok(p.items.at(-1).exercise==='cooldown'&&p.items.at(-1).adaptedDose.seconds>=180,'Cooldown protected '+label);
@@ -31,10 +31,10 @@ for(const minutes of [90,105,120]){const p=example('advanced',minutes);ok(p.item
 T.setState({week:6,day:'tue',coachLoad:'technical',readiness:'normal',equipment:allYes,sessionSettings:{'6:tue':{level:'intermediate',minutes:120,progressionReady:false}}});let p=T.currentSession();ok(p.items.find(x=>x.exercise==='ropes').adaptedDose.sets===6,'Hold starting volume until progression confirmed');
 T.setState({week:6,day:'tue',coachLoad:'technical',readiness:'normal',equipment:allYes,sessionSettings:{'6:tue':{level:'intermediate',minutes:120,progressionReady:true}}});p=T.currentSession();ok(p.items.find(x=>x.exercise==='ropes').adaptedDose.sets===8,'Confirmed progression permitted');
 for(const day of ['thu','sat'])for(const minutes of P.times){T.setState({week:2,day,sessionSettings:{['2:'+day]:{level:'advanced',minutes}}});p=T.currentSession();ok(p.kind==='coach'&&p.items.length===1&&p.items[0].exercise==='coach','Coach plan remains external');if(minutes===30)ok(p.notes[0].includes('shorter session'),'Coaching time conflict explicit');}
-for(const day of ['fri','sun']){T.setState({week:2,day,sessionSettings:{['2:'+day]:{level:'advanced',minutes:120}}});p=T.currentSession();ok(p.kind==='rest'&&p.minutes===0&&p.items[0].exercise==='rest','Two-hour choice preserves rest');}
+for(const day of ['fri','sun']){T.setState({week:2,day,recoveryDays:{['2:'+day]:true},sessionSettings:{['2:'+day]:{level:'advanced',minutes:120}}});p=T.currentSession();ok(p.kind==='rest'&&p.minutes===0&&p.items[0].exercise==='rest','Two-hour choice preserves rest');}
 const clean=P.cleanSettings({'2:mon':{level:'unsafe',minutes:999,progressionReady:'true'},bad:{level:'advanced',minutes:120},'6:tue':{level:'rookie',minutes:45,progressionReady:true}});ok(Object.keys(clean).length===2&&clean['2:mon'].level==='intermediate'&&clean['2:mon'].minutes===105&&!clean['2:mon'].progressionReady,'Invalid settings safely normalised');ok(clean['6:tue'].minutes===45&&clean['6:tue'].level==='rookie','Valid backup choices retained');
 ok(JSON.stringify(D)===before,'Canonical routine never mutated');
-const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(index.indexOf('planner-ui.js')<index.indexOf('i18n.js'),'Planning translations load before translator');ok(sw.includes('planner.js?v=1.5.2')&&sw.includes('planner-ui.js?v=1.5.2'),'Adaptive code available offline');
+const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(index.indexOf('planner-ui.js')<index.indexOf('i18n.js'),'Planning translations load before translator');ok(sw.includes('planner.js?v=1.6.0')&&sw.includes('planner-ui.js?v=1.6.0'),'Adaptive code available offline');
 const mobile=fs.readFileSync(path.join(base,'mobile.js'),'utf8');ok(mobile.includes('cleanSettings(x.sessionSettings)'),'Import preserves sanitised day settings');
 for(const day of D.days){T.setState({week:2,day:day.id});T.renderSession();ok(get('main').innerHTML.includes('id="level-select"')&&get('main').innerHTML.includes('id="duration-select"'),'Both day menus rendered '+day.id);}
 T.setState({week:2,day:'mon',equipment:allYes,coachLoad:'technical'});events.change({target:{id:'duration-select',value:'45'}});events.change({target:{id:'level-select',value:'rookie'}});ok(T.currentSession().choice.level==='rookie'&&T.currentSession().choice.minutes===45,'Control events replan current day');ok(JSON.parse(saved['roundwork.v1']).sessionSettings['2:mon'].minutes===45,'Per-day choices persisted');
@@ -83,7 +83,7 @@ configured('mon','rookie');T.chooseMovement('warmup','warmRope');ok(T.currentSes
 configured('mon','intermediate',30,{swaps:{'2:mon:pallof':'birdDog'}});T.renderSession();ok(!get('main').innerHTML.includes('data-movement="pallof"'),'Omitted slot has no detached selector');ok(T.getState().swaps['2:mon:pallof']==='birdDog','Omitted choice stays saved');
 for(const [id,role] of Object.entries(C.trunkRoles)){ok(D.exercises.some(e=>e.id===id)&&role.length>0,'Known abdominal role '+id);}
 ok(JSON.stringify(D)===before,'Options never mutate routine or library after loading');
-ok(sw.includes('choices.js?v=1.5.2')&&sw.includes('choices-diagrams.js?v=1.5.2'),'New guides and selection code cached offline');
+ok(sw.includes('choices.js?v=1.6.0')&&sw.includes('choices-diagrams.js?v=1.6.0'),'New guides and selection code cached offline');
 console.log(checks+' full-app choice checks passed across '+plans+' baseline and '+optionPlans+' exercise-selection plans.');
 
 configured('mon','intermediate',120);T.renderSession();
@@ -246,7 +246,8 @@ ok(T.getOpenMenu()===null&&T.weekSchedule().tue==='mon','Choosing the current ro
 clickDayControl({day:'wed',calendarDay:'wed'});clickDayControl({dayPlanOption:'thu',planFor:'wed'});
 ok(T.currentSession().kind==='coach'&&T.getState().day==='thu'&&T.weekSchedule().wed==='thu'&&T.weekSchedule().thu==='wed','Coaching remains movable and coach-led through day menus');
 clickDayControl({day:'tue',calendarDay:'mon'});clickDayControl({dayPlanOption:'sun',planFor:'mon'});
-ok(T.currentSession().kind==='rest'&&T.getState().day==='sun','Recovery selection displays a recovery plan');
+ok(T.currentSession().kind==='gym'&&T.getState().day==='sun','Additional skills routine can move to Monday');
+clickDayControl({recoveryDay:'mon'});ok(T.currentSession().kind==='rest','Recovery can be chosen directly for Monday');
 const currentMap=JSON.stringify(T.weekSchedule());T.assignDayPlan('invalid','mon');T.assignDayPlan('mon','invalid');
 ok(JSON.stringify(T.weekSchedule())===currentMap,'Invalid weekday menu assignments rejected');
 T.openRoutineMenu('fri');let escaped=false;events.keydown({key:'Escape',preventDefault:()=>escaped=true});
@@ -259,3 +260,43 @@ ok(!T.getState().schedules['1'],'Direct menus leave lifting weeks unchanged');
 const css=fs.readFileSync(path.join(base,'style.css'),'utf8');
 ok((css.match(/{/g)||[]).length===(css.match(/}/g)||[]).length,'Stylesheet block braces balanced');
 console.log('Direct weekday dropdown regressions passed: seven plans, Skills/Power exchange, immediate plan rendering, movable coaching, retained records, keyboard dismissal and lifting isolation.');
+
+// Optional recovery and additional workout instances.
+for(const day of ['fri','sun']){
+  configured(day,'intermediate',45);T.renderSession();
+  const extraPlan=T.currentSession();
+  ok(extraPlan.kind==='gym'&&extraPlan.minutes<=45,'Additional day has an adapted workout '+day);
+  ok(extraPlan.items.some(item=>item.exercise==='shadow')&&!extraPlan.items.some(item=>item.conditioning),'Additional day includes skills without extra hard intervals '+day);
+  ok(get('main').innerHTML.includes('data-movement="warmup"')&&get('main').innerHTML.includes('data-equipment-ready="warmup"'),'Additional day includes exercise and equipment menus '+day);
+  readyEvent('warmup',true);events.change({target:{dataset:{complete:'warmup'},checked:true}});
+  const ownRecord=T.getState().logs['2:'+day+':warmup'];
+  ok(ownRecord?.exercise==='warmup','Additional day records its own exercise '+day);
+  const preservedExtra=JSON.stringify(Object.fromEntries(['logs','sessions','swaps','sessionSettings','equipmentChecks'].map(key=>[key,T.getState()[key]])));
+  clickDayControl({recoveryDay:day});
+  ok(T.currentSession().kind==='rest'&&T.currentSession().minutes===0,'Additional day can become recovery '+day);
+  ok(T.getState().recoveryDays['2:'+day]===true&&JSON.parse(saved['roundwork.v1']).recoveryDays['2:'+day]===true,'Recovery choice persisted '+day);
+  clickDayControl({recoveryDay:day});
+  ok(T.currentSession().kind==='gym'&&T.currentSession().choice.minutes===45,'Resume restores planned duration '+day);
+  ok(preservedExtra===JSON.stringify(Object.fromEntries(['logs','sessions','swaps','sessionSettings','equipmentChecks'].map(key=>[key,T.getState()[key]]))),'Recovery toggle preserves records and preferences '+day);
+  const other=day==='fri'?'sun':'fri';T.setState({...T.getState(),day:other});
+  ok(!readyCard('warmup')&&!T.getState().logs['2:'+other+':warmup'],'Same template has independent gear and completion '+day);
+}
+for(const day of ids){
+  configured(day);const assigned=JSON.stringify(T.weekSchedule());
+  clickDayControl({recoveryDay:day});
+  ok(T.currentSession().kind==='rest'&&JSON.stringify(T.weekSchedule())===assigned,'Recovery does not move other days '+day);
+  T.changeSchedule('reset');ok(T.currentSession().kind==='rest','Reset weekdays preserves chosen recovery '+day);
+  clickDayControl({recoveryDay:day});ok(T.currentSession().kind===(['thu','sat'].includes(day)?'coach':'gym'),'Resume restores own workout or coaching '+day);
+}
+configured('mon');clickDayControl({recoveryDay:'mon'});T.assignDayPlan('fri','mon');
+ok(T.currentSession().kind==='rest'&&T.weekSchedule().fri==='mon','Recovery choice follows moved routine');
+T.setState({...T.getState(),week:4});ok(T.currentSession().kind==='gym','Other weeks retain independent recovery choices');
+T.setState({week:1,day:'mon'});clickDayControl({recoveryDay:'mon'});ok(!Object.keys(T.getState().recoveryDays).length,'Lifting weeks unchanged by recovery menu events');
+const oldRecovery={logs:{'2:fri:rest':{exercise:'rest',at:actual}},sessions:{'4:sun':{prescription:[{exercise:'rest'}]}}};
+const migrated=S.recoveryChoices(oldRecovery);
+ok(migrated['2:fri']&&migrated['4:sun']&&!migrated['2:sun'],'Old recorded recovery sessions retain their meaning');
+ok(S.recoveryChoices({...oldRecovery,recoveryDays:{'2:fri':false}})['2:fri']===false,'Explicit resume overrides old recovery log');
+const cleanRecovery=S.cleanRecovery({'2:mon':true,'2:fri':false,'1:mon':true,'2:bad':true,'4:sun':'true','8:sun':true});
+ok(Object.keys(cleanRecovery).length===3&&cleanRecovery['2:fri']===false,'Backup validates recovery choices including explicit resume');
+ok(mobile.includes('recoveryChoices(x)'),'Backup import preserves optional recovery and migrates old records');
+console.log('Optional recovery passed: additional workouts, separate logs, equipment isolation, all weekdays, saved settings, rescheduling, week isolation, migration and backup validation.');

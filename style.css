@@ -85,3 +85,5 @@
 .schedule-status .schedule-guidance {color:var(--muted)}
 .day-plan-help {font-weight:600}
 @media(max-width:600px){.schedule-status .schedule-current {display:grid;grid-template-columns:auto 1fr;gap:4px 8px}.day-plan-menu {width:300px}}
+
+.recovery-menu-option{border-bottom:1px solid var(--line);margin-bottom:6px;font-weight:700;}

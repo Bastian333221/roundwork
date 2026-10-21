@@ -3,8 +3,7 @@ const base=__dirname+'/../';
 const noop=()=>{};const element={addEventListener:noop,classList:{add:noop,remove:noop,toggle:noop},setAttribute:noop,textContent:'',innerHTML:'',hidden:false};
 const window={scrollTo:noop};const context={window,document:{getElementById:()=>element,querySelector:()=>element,querySelectorAll:()=>[],addEventListener:noop},localStorage:{getItem:()=>null,setItem:noop},location:{hash:''},history:{replaceState:noop},setInterval:noop,clearInterval:noop,setTimeout:noop,clearTimeout:noop,console,URL,Date,Map,Set,navigator:{}};
 vm.createContext(context);
-vm.runInContext(fs.readFileSync(base+'data.js','utf8'),context);
-vm.runInContext(fs.readFileSync(base+'diagrams.js','utf8'),context);
+for(const file of ['data.js','es.js','es-ui.js','evidence.js','planner.js','planner-ui.js','choices.js','schedule.js','diagrams.js','choices-diagrams.js'])vm.runInContext(fs.readFileSync(base+file,'utf8'),context);
 const app=fs.readFileSync(base+'app.js','utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/, '  window.test={getDose,resolveExercise,availability,setState:s=>{state={...baseState,...s}}};\n})();');
 assert(app.includes('window.test='),'Test hook inserted only in memory');vm.runInContext(app,context);
 const D=window.BOXING_DATA,T=window.test;let checks=0;
@@ -18,7 +17,7 @@ T.setState({week:6,coachLoad:'technical',readiness:'normal'});v=T.getDose(sled,m
 T.setState({week:2,coachLoad:'hard',readiness:'normal'});v=T.getDose(sled,map.get('sled'));ok(v.gated&&v.sets===2&&v.planned.sets===4,'Hard coaching reduces sled but retains planned dose');v=T.getDose(sled,map.get('stepup'));ok(v.reps==='6 each leg'&&v.seconds===null,'Substitute uses its own units, even in reduced mode');
 T.setState({week:2,coachLoad:'technical',readiness:'tired'});v=T.getDose(ropes,map.get('ropes'));ok(v.gated&&v.seconds===10,'Fatigue blocks hard rope intervals');
 T.setState({equipment:{ropes:'no',floor:'yes',bike:'yes'},swaps:{}});ok(T.resolveExercise('ropes').id==='bikeIntervals','Missing ropes resolves to available bike');
-T.setState({equipment:{sled:'no',sledLane:'no',step:'no',floor:'yes'},swaps:{}});ok(T.resolveExercise('sled').id==='splitSquat','No sled or step resolves to split squat');
+T.setState({equipment:{sled:'no',sledLane:'no',step:'no',floor:'yes'},swaps:{}});ok(T.resolveExercise('sled').id==='marchIntervals','Missing sled or step uses the available equipment-free conditioning alternative');
 T.setState({equipment:{},swaps:{}});ok(T.availability(map.get('sled'))==='unknown','Unknown never assumed available');
 const manifest=JSON.parse(fs.readFileSync(base+'manifest.webmanifest'));ok(manifest.display==='standalone','Home-screen manifest');for(const x of manifest.icons)ok(fs.existsSync(base+x.src),'App icon exists');
 console.log(`${checks} checks passed: prescriptions, progression, recovery, substitutions, diagrams and mobile assets.`);

@@ -3,7 +3,7 @@ window.RoundworkPlanner = (() => {
   'use strict';
   const levels=['rookie','intermediate','advanced'];
   const times=[30,45,60,75,90,105,120];
-  const defaults={mon:105,tue:60,wed:75,thu:60,fri:30,sat:60,sun:30};
+  const defaults={mon:105,tue:60,wed:75,thu:60,fri:60,sat:60,sun:60};
   const cleanChoice=(x={},day='mon')=>({level:levels.includes(x?.level)?x.level:'intermediate',minutes:times.includes(x?.minutes)?x.minutes:(defaults[day]||60),progressionReady:x?.progressionReady===true});
   function cleanSettings(settings) {
     const out={};
@@ -29,8 +29,9 @@ window.RoundworkPlanner = (() => {
   }
   function plan(day,choice,context,resolve,doseFor,exerciseById) {
     choice=cleanChoice(choice,day.id);
-    if(['thu','sat'].includes(day.id))return {kind:'coach',items:day.items,minutes:60,choice,notes:[choice.minutes<60?'Coaching is scheduled for 45–60 minutes. Arrange a shorter session with your coach; the app does not shorten sparring or coaching.':'Follow your coach’s session. Extra available time does not add sparring or hard conditioning.']};
-    if(['fri','sun'].includes(day.id))return {kind:'rest',items:day.items,minutes:0,choice,notes:['Keep this a recovery day. An optional comfortable 10–20-minute walk is enough; the time selector does not create a hard workout.']};
+    const template=day.templateId||day.id;
+    if(['thu','sat'].includes(template))return {kind:'coach',items:day.items,minutes:60,choice,notes:[choice.minutes<60?'Coaching is scheduled for 45–60 minutes. Arrange a shorter session with your coach; the app does not shorten sparring or coaching.':'Follow your coach’s session. Extra available time does not add sparring or hard conditioning.']};
+    if(['fri','sun'].includes(template))return {kind:'rest',items:day.items,minutes:0,choice,notes:['Keep this a recovery day. An optional comfortable 10–20-minute walk is enough; the time selector does not create a hard workout.']};
     const {level,minutes}=choice;
     const tired=context.readiness==='tired',hard=context.coachLoad!=='technical'||tired;
     const rookie=level==='rookie',advanced=level==='advanced';
@@ -86,7 +87,7 @@ window.RoundworkPlanner = (() => {
       d.planned={...d};
       add(item,ex,d);
     }
-    if(rookie&&day.id!=='tue'&&!items.some(x=>x.exercise==='shadow')){
+    if(rookie&&template!=='tue'&&!items.some(x=>x.exercise==='shadow')){
       const ex=exerciseById('shadow');
       items.splice(1,0,{exercise:'shadow',selectedExercise:ex,adaptedDose:{sets:2,reps:'1-minute round',seconds:60,rest:60,notes:'Relaxed coach-taught stance and footwork; keep balance.',skip:false,gated:false}});
     }
@@ -111,7 +112,7 @@ window.RoundworkPlanner = (() => {
     if(secondaryLeg&&over())remove(secondaryLeg);
     for(const item of [...items].filter(x=>x.selectedExercise.category==='Power'))if(over())remove(item);
     // This final trim is only for exceptional long substitutions at the minimum budget.
-    for(const item of [...items].filter(x=>x.exercise==='shadow'))if(over()&&day.id!=='tue')remove(item);
+    for(const item of [...items].filter(x=>x.exercise==='shadow'))if(over()&&template!=='tue')remove(item);
     if(over())throw Error('Session cannot fit with protected warm-up and recovery.');
     if(removed.length)notes.push('Some optional exercises or sets were removed to fit your time. Do not add them back as a finisher.');
     notes.push('Estimates include displayed rests, setup and transitions. Gym queues and learning a movement can take longer; finish with the cooldown when your time is up.');

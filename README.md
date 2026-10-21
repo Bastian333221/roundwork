@@ -1,4 +1,4 @@
-# ROUNDWORK 1.5.2
+# ROUNDWORK 1.6.0
 
 Boxing gym sessions include a Choose movement dropdown inside every exercise card, beside its timers and guide, with 3–6 catalog options per slot. Level, available equipment and existing choices can restrict those options; Rookie has no explosive drills. Selections replace a slot and replan the session. A Done checkbox in each card saves its actual movement and dose in the selected week/day log. Uncheck to undo completion. Completed slots are locked. Short sessions may omit selected slots, while retaining the saved choice for later.
 
@@ -24,7 +24,7 @@ Settings and logs remain on the device. Use export/import backups to transfer be
 
 ## Program
 
-Lifting weeks preserve the existing chest/back, legs, shoulders/arms rotation. Boxing-focused weeks use two power/strength days and an aerobic/technique day, Thursday/Saturday coaching and Friday/Sunday recovery. Intermediate starting doses are sled pushes 4 x 15 m with 120 s rest and battle ropes 6 x 20 s work / 40 s rest. Coaching intensity and recovery adjust conditioning. Later boxing weeks progress gradually.
+Lifting weeks preserve the existing chest/back, legs, shoulders/arms rotation. Boxing-focused weeks use two power/strength days and an aerobic/technique day, Thursday/Saturday coaching and optional Friday/Sunday skills and easy aerobic sessions. Choose recovery on any weekday from its menu. Intermediate starting doses are sled pushes 4 x 15 m with 120 s rest and battle ropes 6 x 20 s work / 40 s rest. Coaching intensity and recovery adjust conditioning. Later boxing weeks progress gradually.
 
 Demonstrations teach movement, not a form assessment or proof of boxing transfer. Follow the app dose rather than a video’s workout. The backup diagrams show simplified positions. Expert sources and transfer limitations are included in the app. Have a trainer demonstrate unfamiliar movements and review the gym load with your boxing coach.
 
@@ -40,4 +40,6 @@ Static HTML/CSS/JavaScript with no build dependencies. Serve this directory with
 
 Each exercise card has independent equipment confirmation for its selected movement, week and day. Equipment ready selects all required items on that card; expand Equipment checklist to select individual items. Checks never select another card or change My gym inventory. Changing the movement clears its card checklist; completed logs are preserved. Backup/import includes these checks. Equipment-free exercises show a checked, disabled control.
 
-Flexible boxing-week schedule: click any weekday tile to open its training-plan dropdown. Select Power & strength A/B, Skills & conditioning, Coaching A/B, or Recovery A/B. Selecting a routine exchanges it with the routine currently assigned to that weekday, then displays the selected plan. The separate Adapt this week editor is removed. Mappings remain per boxing week and routine IDs/log keys stay stable. Exercise choices, doses, gear checks and recorded dates remain attached to their routines. Restore original weekdays resets only assignments. Recovery guidance and consecutive-strength-day warnings remain. Menus support Escape, arrow keys, Home/End, Tab and outside-click dismissal.
+Flexible boxing-week schedule: click any weekday tile to open its training-plan dropdown. Select Power & strength A/B, Skills & conditioning, Coaching A/B, or the additional Skills & aerobic A/B routines. Selecting a routine exchanges it with the routine currently assigned to that weekday, then displays the selected plan. The separate Adapt this week editor is removed. Mappings remain per boxing week and routine IDs/log keys stay stable. Exercise choices, doses, gear checks and recorded dates remain attached to their routines. Restore original weekdays resets only assignments. Recovery guidance and consecutive-strength-day warnings remain. Menus support Escape, arrow keys, Home/End, Tab and outside-click dismissal.
+
+Friday/Sunday workouts have separate stable routine IDs and use the existing skills/aerobic prescriptions without extra rope intervals. Each weekday menu has Make this a recovery day / Resume planned session. Recovery choices follow their routines when rescheduled and are saved per boxing week, included in backups, and do not erase exercise records. Older logged recovery sessions retain their recovery choice. Available workouts do not prescribe training seven days a week.
