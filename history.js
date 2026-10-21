@@ -19,10 +19,10 @@ window.RoundworkHistory=(()=>{
   function cleanRecord(value,id){
     if(!object(value)||!idPattern.test(id)||!keyPattern.test(value.week+':'+value.routine))return null;
     const week=Number(value.week),routine=value.routine;
-    const rawExercises=(Array.isArray(value.exercises)?value.exercises:[]).filter(x=>object(x)&&known(x.slot)&&known(x.exercise)).map(x=>({slot:x.slot,exercise:x.exercise,at:date(x.at),settings:window.RoundworkPlanner.cleanChoice(x.settings,routine),dose:dose(x.dose)}));
+    const rawExercises=(Array.isArray(value.exercises)?value.exercises:[]).filter(x=>object(x)&&known(x.slot)&&known(x.exercise)).map(x=>({slot:x.slot,exercise:x.exercise,at:date(x.at),settings:object(x.settings)?window.RoundworkPlanner.cleanChoice(x.settings,routine):null,dose:dose(x.dose)}));
     const exercises=[...new Map(rawExercises.map(item=>[item.slot,item])).values()];
     const prescription=(Array.isArray(value.prescription)?value.prescription:[]).filter(x=>object(x)&&known(x.exercise)&&known(x.selected)).map(x=>({exercise:x.exercise,selected:x.selected,dose:dose(x.dose)}));
-    return {id,week,routine,title:text(value.title,200),scheduledDay:window.RoundworkSchedule.ids.includes(value.scheduledDay)?value.scheduledDay:null,firstRecordedAt:date(value.firstRecordedAt),updatedAt:date(value.updatedAt),finishedAt:date(value.finishedAt),closedAt:date(value.closedAt),settings:window.RoundworkPlanner.cleanChoice(value.settings,routine),readiness:['normal','tired'].includes(value.readiness)?value.readiness:null,coachLoad:['unknown','technical','hard'].includes(value.coachLoad)?value.coachLoad:null,prescription,exercises,equipmentChecks:window.RoundworkChoices.cleanEquipmentChecks(value.equipmentChecks)};
+    return {id,week,routine,title:text(value.title,200),scheduledDay:window.RoundworkSchedule.ids.includes(value.scheduledDay)?value.scheduledDay:null,firstRecordedAt:date(value.firstRecordedAt),updatedAt:date(value.updatedAt),finishedAt:date(value.finishedAt),closedAt:date(value.closedAt),settings:object(value.settings)?window.RoundworkPlanner.cleanChoice(value.settings,routine):null,readiness:['normal','tired'].includes(value.readiness)?value.readiness:null,coachLoad:['unknown','technical','hard'].includes(value.coachLoad)?value.coachLoad:null,prescription,exercises,equipmentChecks:window.RoundworkChoices.cleanEquipmentChecks(value.equipmentChecks)};
   }
   function hasWork(state,key){return !!state.sessions?.[key]||Object.keys(state.logs||{}).some(k=>k.startsWith(key+':'));}
   function capture(state,key,id,meta={},previous){
@@ -31,7 +31,7 @@ window.RoundworkHistory=(()=>{
     const dates=[...exercises.map(x=>date(x.at)),date(session?.at)].filter(Boolean).sort((a,b)=>new Date(a)-new Date(b));
     const day=window.BOXING_DATA.days.find(d=>d.id===routine);
     const title=window.RoundworkSchedule.routine(day,{week:Number(week),recoveryDays:state.recoveryDays}).title;
-    return cleanRecord({week:Number(week),routine,title:previous?.title||meta.title||title,scheduledDay:previous?previous.scheduledDay:meta.scheduledDay,firstRecordedAt:previous?.firstRecordedAt||dates[0]||null,updatedAt:session?.updatedAt||dates.at(-1)||null,finishedAt:session?.at,settings:session?.settings||meta.settings||state.sessionSettings?.[key],readiness:session?.readiness||meta.readiness,coachLoad:session?.coachLoad||meta.coachLoad,prescription:session?.prescription||meta.prescription,exercises,equipmentChecks:Object.fromEntries(Object.entries(state.equipmentChecks||{}).filter(([k])=>k.startsWith(key+':')))},id);
+    return cleanRecord({week:Number(week),routine,title:previous?.title||meta.title||title,scheduledDay:previous?previous.scheduledDay:meta.scheduledDay,firstRecordedAt:previous?.firstRecordedAt||dates[0]||null,updatedAt:session?.updatedAt||dates.at(-1)||null,finishedAt:session?.at,settings:session?.settings||exercises.find(item=>item.settings)?.settings||previous?.settings||(!previous?meta.settings:null),readiness:session?.readiness||previous?.readiness||(!previous?meta.readiness:null),coachLoad:session?.coachLoad||previous?.coachLoad||(!previous?meta.coachLoad:null),prescription:session?.prescription||previous?.prescription||meta.prescription,exercises,equipmentChecks:Object.fromEntries(Object.entries(state.equipmentChecks||{}).filter(([k])=>k.startsWith(key+':')))},id);
   }
   function restore(state){
     const sessionHistory={},activeSessions={};
@@ -93,7 +93,7 @@ window.RoundworkHistory=(()=>{
     ['Plan at the time of recording','Plan al registrar'],['Time available','Tiempo disponible'],['Readiness','Estado de recuperación'],['Coaching load','Carga del boxeo'],['Tired','Cansado'],['Unknown','Sin confirmar'],['Technical / light','Técnico / suave'],['Hard','Intenso'],
     ['Reset affects this attempt only. Earlier attempts remain in Log.','El restablecimiento afecta solo a este intento. Los intentos anteriores quedan en Registro.'],
     ['Only the selected training week is shown. Choose All training weeks to see the full history.','Solo se muestra la semana de entrenamiento seleccionada. Elige Todas las semanas de entrenamiento para ver el historial completo.'],
-    ['Original scheduled weekday unavailable','Día programado original no disponible']
+    ['Original scheduled weekday unavailable','Día programado original no disponible'],['Settings not recorded','Ajustes no registrados']
   ];
   for(let week=1;week<=8;week++)pairs.push(['Week '+week,'Semana '+week]);
   for(const [en,es] of pairs)window.ROUNDWORK_ES[en]=es;

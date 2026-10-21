@@ -57,6 +57,10 @@ const partialId=T.getState().activeSessions['2:tue'];click({action:'repeat-sessi
 ok(T.getState().sessionHistory[partialId].closedAt&&!T.getState().sessionHistory[partialId].finishedAt,'Unfinished attempts retained as partial sessions');
 ok(T.historyCard(T.getState().sessionHistory[partialId]).includes('Partial session'),'Partial session has distinct visible status');
 const noDate=H.restore({logs:{'2:mon:warmup':{exercise:'warmup'}},sessions:{}});ok(Object.values(noDate.sessionHistory)[0].firstRecordedAt===null,'Checkbox-only legacy records also avoid invented dates');
+ok(Object.values(noDate.sessionHistory)[0].settings===null,'Legacy records without settings do not receive default level or time');
+const unknownState={...copy(noDate),logs:{'2:mon:warmup':{exercise:'warmup'}},sessions:{}};
+H.checkpoint(unknownState,'2:mon',{settings:{level:'advanced',minutes:120},readiness:'normal',prescription:[{exercise:'squat',selected:'squat',dose:{sets:3}}]});
+ok(unknownState.sessionHistory['legacy-2-mon'].settings===null&&unknownState.sessionHistory['legacy-2-mon'].prescription.length===0,'Viewing old records does not fill missing settings or invent a past plan');
 const invalid={...copy(firstSaved),week:9};
 ok(H.cleanRecord(invalid,'session-test')===null&&H.cleanRecord(firstSaved,'__proto__')===null,'Backup rejects invalid weeks and unsafe identifiers');
 const badLinks=H.restore({...old,sessionHistory:migrated.sessionHistory,activeSessions:{'2:mon':'legacy-4-wed'}});ok(badLinks.activeSessions['2:mon']!=='legacy-4-wed','Backup rejects active links to a different week/routine');
