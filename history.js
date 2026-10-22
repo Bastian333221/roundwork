@@ -10,7 +10,7 @@ window.RoundworkHistory=(()=>{
   function dose(value){
     if(!object(value))return {};
     const out={};
-    for(const key of ['sets','reps','rest','seconds','notes','skip','gated']){
+    for(const key of ['sets','reps','rest','seconds','notes','skip','gated','standardSets']){
       const v=value[key];
       if(v===null||typeof v==='boolean'||typeof v==='string'||typeof v==='number'&&Number.isFinite(v))out[key]=typeof v==='string'?v.slice(0,5000):v;
     }
@@ -23,7 +23,7 @@ window.RoundworkHistory=(()=>{
     const rawExercises=(Array.isArray(value.exercises)?value.exercises:[]).filter(x=>object(x)&&((known(x.slot)||value.source==='manual'&&/^extra-\d+$/.test(x.slot))&&known(x.exercise)||customFor(x))).map(x=>({slot:x.slot,exercise:x.exercise,customName:customFor(x)?.customName||'',section:customFor(x)?.section||null,at:date(x.at),settings:object(x.settings)?window.RoundworkPlanner.cleanChoice(x.settings,routine):null,dose:dose(x.dose),actual:window.RoundworkPerformance?.actual(x.actual)||null}));
     const exercises=[...new Map(rawExercises.map(item=>[item.slot,item])).values()];
     const prescription=(Array.isArray(value.prescription)?value.prescription:[]).filter(x=>object(x)&&known(x.exercise)&&known(x.selected)).map(x=>({exercise:x.exercise,selected:x.selected,dose:dose(x.dose)}));
-    return {id,week,routine,title:text(value.title,200),source:value.source==='manual'?'manual':'app',performedDate:window.RoundworkPerformance?.dateOnly(value.performedDate)||null,enteredAt:date(value.enteredAt),scheduledDay:window.RoundworkSchedule.ids.includes(value.scheduledDay)?value.scheduledDay:null,firstRecordedAt:date(value.firstRecordedAt),updatedAt:date(value.updatedAt),finishedAt:date(value.finishedAt),closedAt:date(value.closedAt),settings:object(value.settings)?window.RoundworkPlanner.cleanChoice(value.settings,routine):null,readiness:['normal','tired'].includes(value.readiness)?value.readiness:null,coachLoad:['unknown','technical','hard'].includes(value.coachLoad)?value.coachLoad:null,prescription,exercises,customizations,equipmentChecks:window.RoundworkChoices.cleanEquipmentChecks(value.equipmentChecks)};
+    return {id,week,routine,title:text(value.title,200),source:value.source==='manual'?'manual':'app',performedDate:window.RoundworkPerformance?.dateOnly(value.performedDate)||null,enteredAt:date(value.enteredAt),scheduledDay:window.RoundworkSchedule.ids.includes(value.scheduledDay)?value.scheduledDay:null,firstRecordedAt:date(value.firstRecordedAt),updatedAt:date(value.updatedAt),finishedAt:date(value.finishedAt),closedAt:date(value.closedAt),settings:object(value.settings)?window.RoundworkPlanner.cleanChoice(value.settings,routine):null,readiness:['normal','tired'].includes(value.readiness)?value.readiness:null,coachLoad:['unknown','technical','hard'].includes(value.coachLoad)?value.coachLoad:null,prescription,exercises,customizations,readinessCheck:window.RoundworkReadiness?.clean(value.readinessCheck)||null,sessionEffort:window.RoundworkReadiness?.effort(value.sessionEffort)||null,equipmentChecks:window.RoundworkChoices.cleanEquipmentChecks(value.equipmentChecks)};
   }
   function hasWork(state,key){return !!state.sessions?.[key]||Object.keys(state.logs||{}).some(k=>k.startsWith(key+':'));}
   function capture(state,key,id,meta={},previous){
@@ -32,7 +32,7 @@ window.RoundworkHistory=(()=>{
     const dates=[...exercises.map(x=>date(x.at)),date(session?.at)].filter(Boolean).sort((a,b)=>new Date(a)-new Date(b));
     const day=window.BOXING_DATA.days.find(d=>d.id===routine);
     const title=window.RoundworkSchedule.routine(day,{week:Number(week),recoveryDays:state.recoveryDays}).title;
-    return cleanRecord({week:Number(week),routine,title:previous?.title||meta.title||title,scheduledDay:previous?previous.scheduledDay:meta.scheduledDay,firstRecordedAt:previous?.firstRecordedAt||dates[0]||null,updatedAt:session?.updatedAt||dates.at(-1)||null,finishedAt:session?.at,settings:session?.settings||exercises.find(item=>item.settings)?.settings||previous?.settings||(!previous?meta.settings:null),readiness:session?.readiness||previous?.readiness||(!previous?meta.readiness:null),coachLoad:session?.coachLoad||previous?.coachLoad||(!previous?meta.coachLoad:null),prescription:session?.prescription||previous?.prescription||meta.prescription,exercises,customizations:state.sessionAdditions?.[key]||[],equipmentChecks:Object.fromEntries(Object.entries(state.equipmentChecks||{}).filter(([k])=>k.startsWith(key+':')))},id);
+    return cleanRecord({week:Number(week),routine,title:previous?.title||meta.title||title,scheduledDay:previous?previous.scheduledDay:meta.scheduledDay,firstRecordedAt:previous?.firstRecordedAt||dates[0]||null,updatedAt:session?.updatedAt||dates.at(-1)||null,finishedAt:session?.at,settings:session?.settings||exercises.find(item=>item.settings)?.settings||previous?.settings||(!previous?meta.settings:null),readiness:session?.readiness||previous?.readiness||(!previous?meta.readiness:null),coachLoad:session?.coachLoad||previous?.coachLoad||(!previous?meta.coachLoad:null),prescription:session?.prescription||previous?.prescription||meta.prescription,exercises,customizations:state.sessionAdditions?.[key]||[],readinessCheck:state.readinessChecks?.[key]||session?.readinessCheck||previous?.readinessCheck,sessionEffort:session?.sessionEffort||previous?.sessionEffort,equipmentChecks:Object.fromEntries(Object.entries(state.equipmentChecks||{}).filter(([k])=>k.startsWith(key+':')))},id);
   }
   function restore(state){
     const sessionHistory={},activeSessions={},sessionAdditions=window.RoundworkPerformance?.cleanAdditions(state.sessionAdditions)||{};
@@ -75,6 +75,7 @@ window.RoundworkHistory=(()=>{
     if(previous)state.sessionHistory={...state.sessionHistory,[id]:{...previous,closedAt:new Date().toISOString()}};
     for(const name of ['logs','equipmentChecks'])state[name]=Object.fromEntries(Object.entries(state[name]||{}).filter(([k])=>!k.startsWith(key+':')));
     state.sessions={...state.sessions};delete state.sessions[key];
+    window.RoundworkReadiness?.reset(state,key);
     state.activeSessions={...state.activeSessions,[key]:newId(state)};
   }
   function records(state,week='all'){

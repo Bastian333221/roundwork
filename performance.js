@@ -15,7 +15,7 @@ window.RoundworkPerformance=(()=>{
     const equipment=typeof value.equipment==='string'?value.equipment.trim().slice(0,250):'';
     let guideUrl=typeof value.guideUrl==='string'?value.guideUrl.trim().slice(0,2000):'';
     if(guideUrl){try{const url=new URL(guideUrl);if(url.protocol!=='https:'||url.username||url.password)return null;guideUrl=url.href;}catch{return null;}}
-    return {slot:value.slot,exercise:value.exercise,customName:known(value.exercise)?'':customName,section:value.section,replaces:known(value.replaces)?value.replaces:null,equipment,guideUrl};
+    return {slot:value.slot,exercise:value.exercise,customName:known(value.exercise)?'':customName,section:value.section,replaces:known(value.replaces)?value.replaces:null,equipment,guideUrl,guideExercise:known(value.guideExercise)?value.guideExercise:null,guideNotes:typeof value.guideNotes==='string'?value.guideNotes.trim().slice(0,2000):''};
   }
   function definitions(value){
     if(!Array.isArray(value))return [];
@@ -104,7 +104,7 @@ window.RoundworkPerformance=(()=>{
       const previous=old?.exercises.find(ex=>ex.slot===slot&&ex.exercise===entry.exercise);
       exercises.push({slot,exercise:entry.exercise,customName:custom?.customName||'',section:custom?.section||null,at:previous?.at||now,settings:null,dose:{},actual:measured});
     }
-    const record=window.RoundworkHistory.cleanRecord({id,week,routine:day.id,title:input.recovery?'Recovery':window.RoundworkSchedule.routine(day,{week:2,recoveryDays:{}}).title,source:'manual',performedDate,enteredAt:old?.enteredAt||now,firstRecordedAt:old?.firstRecordedAt||now,updatedAt:now,finishedAt:old?.finishedAt||now,closedAt:old?.closedAt||now,settings:null,exercises,customizations:customizations.filter(row=>exercises.some(entry=>entry.slot===row.slot)),prescription:[],equipmentChecks:{}},id);
+    const record=window.RoundworkHistory.cleanRecord({id,week,routine:day.id,title:input.recovery?'Recovery':window.RoundworkSchedule.routine(day,{week:2,recoveryDays:{}}).title,source:'manual',performedDate,enteredAt:old?.enteredAt||now,firstRecordedAt:old?.firstRecordedAt||now,updatedAt:now,finishedAt:old?.finishedAt||now,closedAt:old?.closedAt||now,settings:null,exercises,customizations:customizations.filter(row=>exercises.some(entry=>entry.slot===row.slot)),prescription:[],readinessCheck:old?.readinessCheck,sessionEffort:old?.sessionEffort,equipmentChecks:{}},id);
     if(!record)return null;
     state.sessionHistory={...state.sessionHistory,[id]:record};return record;
   }

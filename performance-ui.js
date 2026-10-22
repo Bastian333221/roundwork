@@ -59,7 +59,7 @@ window.RoundworkPerformanceUI=(()=>{
         const prefix=record.week+':'+record.routine,key=prefix+':'+editor.slot;
         if(state.activeSessions[prefix]===record.id&&(!state.logs[key]||state.logs[key].exercise===editor.exercise))state.logs={...state.logs,[key]:{exercise:editor.exercise,at:now,settings:null,dose:{},...state.logs[key],actual}};
       }
-      c.persist();c.closeModal();c.render();c.toast('Actual work saved.');editor=null;
+      if(c.persist()===false){$('#actual-error').textContent=t('Changes could not be saved. Keep this page open and export a backup of your unsaved work.');return;}c.closeModal();c.render();c.toast('Actual work saved.');editor=null;
     }
     function routineOptions(){
       return D.days.map(day=>({id:day.id,title:window.RoundworkSchedule.routine(day,{week:2,recoveryDays:{}}).title})).concat({id:'recovery',title:'Recovery'});
@@ -79,7 +79,7 @@ window.RoundworkPerformanceUI=(()=>{
     function saveManual(){
       readManual();const state=c.getState(),record=P.addManual(state,{...manual,routine:manual.selection==='recovery'?'fri':manual.selection,recovery:manual.selection==='recovery'});
       if(!record){$('#manual-error').textContent=t('Choose a routine and a valid date no later than today. Each performed exercise must appear only once.');return;}
-      c.persist();c.closeModal();c.setLogWeek(String(record.week));c.showLog();c.toast('Past session saved in Log.');manual=null;
+      manual.id=record.id;if(c.persist()===false){$('#manual-error').textContent=t('Changes could not be saved. Keep this page open and export a backup of your unsaved work.');return;}c.closeModal();c.setLogWeek(String(record.week));c.showLog();c.toast('Past session saved in Log.');manual=null;
     }
     function comparisonHTML(records){
       const ids=[...new Set(records.flatMap(record=>window.RoundworkHistory.visibleExercises(record).filter(entry=>entry.actual).map(entry=>entry.exercise)))];

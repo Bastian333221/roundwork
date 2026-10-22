@@ -3,7 +3,7 @@ const base=__dirname+'/../';
 const noop=()=>{};const element={addEventListener:noop,classList:{add:noop,remove:noop,toggle:noop},setAttribute:noop,textContent:'',innerHTML:'',hidden:false};
 const window={scrollTo:noop};const context={window,document:{getElementById:()=>element,querySelector:()=>element,querySelectorAll:()=>[],addEventListener:noop},localStorage:{getItem:()=>null,setItem:noop},location:{hash:''},history:{replaceState:noop},setInterval:noop,clearInterval:noop,setTimeout:noop,clearTimeout:noop,console,URL,Date,Map,Set,navigator:{}};
 vm.createContext(context);
-for(const file of ['data.js','es.js','es-ui.js','evidence.js','planner.js','planner-ui.js','choices.js','schedule.js','history.js','performance.js','performance-ui.js','customization-ui.js','diagrams.js','choices-diagrams.js'])vm.runInContext(fs.readFileSync(base+file,'utf8'),context);
+for(const file of ['data.js','es.js','es-ui.js','evidence.js','planner.js','planner-ui.js','choices.js','schedule.js','history.js','performance.js','performance-ui.js','customization-ui.js','readiness.js','custom-guides.js','diagrams.js','choices-diagrams.js'])vm.runInContext(fs.readFileSync(base+file,'utf8'),context);
 const app=fs.readFileSync(base+'app.js','utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/, '  window.test={getDose,resolveExercise,availability,setState:s=>{state={...baseState,...s}}};\n})();');
 assert(app.includes('window.test='),'Test hook inserted only in memory');vm.runInContext(app,context);
 const D=window.BOXING_DATA,T=window.test;let checks=0;
