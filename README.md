@@ -1,4 +1,6 @@
-# ROUNDWORK 1.10.1
+# ROUNDWORK 1.11.0
+
+Log management: every saved or partial session can be edited, including its numbered training week, routine, optional corrected performed date (required for manual entries), performed exercise list, actual measurements, notes and optional effort rating. Edit forms use drafts until Save changes. Original prescription snapshots and original recording timestamps are retained. Editing the active attempt updates working completions; moving it to another week/routine archives it and clears only the former working attempt. Deleting a session or clearing a selected numbered week moves its records to Deleted sessions, excludes them from totals/comparisons and clears affected active working marks. Restore returns an archived record without overwriting current training. Deleted records survive reload and backup/import; deletion is recoverable rather than a privacy erasure. Schedules, routine settings and global gym inventory are preserved.
 
 Warm-up feedback now explains the selected response directly beneath the menu and shows the current exercise set changes and omissions there. The unanswered state is a disabled placeholder, not a selectable workout response. Existing pending records remain compatible. Coaching, recovery, missing initial readiness and pain/illness overrides are described without claiming gym adjustments that are not applied. Training rules and stored record formats are unchanged.
 

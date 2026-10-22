@@ -104,7 +104,7 @@ window.RoundworkPerformance=(()=>{
       const previous=old?.exercises.find(ex=>ex.slot===slot&&ex.exercise===entry.exercise);
       exercises.push({slot,exercise:entry.exercise,customName:custom?.customName||'',section:custom?.section||null,at:previous?.at||now,settings:null,dose:{},actual:measured});
     }
-    const record=window.RoundworkHistory.cleanRecord({id,week,routine:day.id,title:input.recovery?'Recovery':window.RoundworkSchedule.routine(day,{week:2,recoveryDays:{}}).title,source:'manual',performedDate,enteredAt:old?.enteredAt||now,firstRecordedAt:old?.firstRecordedAt||now,updatedAt:now,finishedAt:old?.finishedAt||now,closedAt:old?.closedAt||now,settings:null,exercises,customizations:customizations.filter(row=>exercises.some(entry=>entry.slot===row.slot)),prescription:[],readinessCheck:old?.readinessCheck,sessionEffort:old?.sessionEffort,equipmentChecks:{}},id);
+    const record=window.RoundworkHistory.cleanRecord({id,week,routine:day.id,title:input.recovery?'Recovery':window.RoundworkSchedule.routine(day,{week:2,recoveryDays:{}}).title,source:'manual',performedDate,enteredAt:old?.enteredAt||now,firstRecordedAt:old?.firstRecordedAt||now,updatedAt:now,finishedAt:old?.finishedAt||now,closedAt:old?.closedAt||now,settings:null,exercises,customizations:customizations.filter(row=>exercises.some(entry=>entry.slot===row.slot)),prescription:[],readinessCheck:old?.readinessCheck,sessionEffort:input.sessionEffort??old?.sessionEffort,sessionNotes:input.sessionNotes??old?.sessionNotes,equipmentChecks:{}},id);
     if(!record)return null;
     state.sessionHistory={...state.sessionHistory,[id]:record};return record;
   }

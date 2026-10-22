@@ -20,10 +20,10 @@ window.RoundworkHistory=(()=>{
     if(!object(value)||!idPattern.test(id)||!keyPattern.test(value.week+':'+value.routine))return null;
     const week=Number(value.week),routine=value.routine,customizations=window.RoundworkPerformance?.definitions(value.customizations)||[];
     const customFor=x=>customizations.find(row=>row.slot===x.slot&&row.exercise===x.exercise);
-    const rawExercises=(Array.isArray(value.exercises)?value.exercises:[]).filter(x=>object(x)&&((known(x.slot)||value.source==='manual'&&/^extra-\d+$/.test(x.slot))&&known(x.exercise)||customFor(x))).map(x=>({slot:x.slot,exercise:x.exercise,customName:customFor(x)?.customName||'',section:customFor(x)?.section||null,at:date(x.at),settings:object(x.settings)?window.RoundworkPlanner.cleanChoice(x.settings,routine):null,dose:dose(x.dose),actual:window.RoundworkPerformance?.actual(x.actual)||null}));
+    const rawExercises=(Array.isArray(value.exercises)?value.exercises:[]).filter(x=>object(x)&&((known(x.slot)||/^extra-\d+$/.test(x.slot))&&known(x.exercise)||customFor(x))).map(x=>({slot:x.slot,exercise:x.exercise,customName:customFor(x)?.customName||'',section:customFor(x)?.section||null,at:date(x.at),settings:object(x.settings)?window.RoundworkPlanner.cleanChoice(x.settings,routine):null,dose:dose(x.dose),actual:window.RoundworkPerformance?.actual(x.actual)||null}));
     const exercises=[...new Map(rawExercises.map(item=>[item.slot,item])).values()];
     const prescription=(Array.isArray(value.prescription)?value.prescription:[]).filter(x=>object(x)&&known(x.exercise)&&known(x.selected)).map(x=>({exercise:x.exercise,selected:x.selected,dose:dose(x.dose)}));
-    return {id,week,routine,title:text(value.title,200),source:value.source==='manual'?'manual':'app',performedDate:window.RoundworkPerformance?.dateOnly(value.performedDate)||null,enteredAt:date(value.enteredAt),scheduledDay:window.RoundworkSchedule.ids.includes(value.scheduledDay)?value.scheduledDay:null,firstRecordedAt:date(value.firstRecordedAt),updatedAt:date(value.updatedAt),finishedAt:date(value.finishedAt),closedAt:date(value.closedAt),settings:object(value.settings)?window.RoundworkPlanner.cleanChoice(value.settings,routine):null,readiness:['normal','tired'].includes(value.readiness)?value.readiness:null,coachLoad:['unknown','technical','hard'].includes(value.coachLoad)?value.coachLoad:null,prescription,exercises,customizations,readinessCheck:window.RoundworkReadiness?.clean(value.readinessCheck)||null,sessionEffort:window.RoundworkReadiness?.effort(value.sessionEffort)||null,equipmentChecks:window.RoundworkChoices.cleanEquipmentChecks(value.equipmentChecks)};
+    return {id,week,routine,title:text(value.title,200),source:value.source==='manual'?'manual':'app',performedDate:window.RoundworkPerformance?.dateOnly(value.performedDate)||null,enteredAt:date(value.enteredAt),scheduledDay:window.RoundworkSchedule.ids.includes(value.scheduledDay)?value.scheduledDay:null,firstRecordedAt:date(value.firstRecordedAt),updatedAt:date(value.updatedAt),finishedAt:date(value.finishedAt),closedAt:date(value.closedAt),deletedAt:date(value.deletedAt),sessionNotes:text(value.sessionNotes,2000),settings:object(value.settings)?window.RoundworkPlanner.cleanChoice(value.settings,routine):null,readiness:['normal','tired'].includes(value.readiness)?value.readiness:null,coachLoad:['unknown','technical','hard'].includes(value.coachLoad)?value.coachLoad:null,prescription,exercises,customizations,readinessCheck:window.RoundworkReadiness?.clean(value.readinessCheck)||null,sessionEffort:window.RoundworkReadiness?.effort(value.sessionEffort)||null,equipmentChecks:window.RoundworkChoices.cleanEquipmentChecks(value.equipmentChecks)};
   }
   function hasWork(state,key){return !!state.sessions?.[key]||Object.keys(state.logs||{}).some(k=>k.startsWith(key+':'));}
   function capture(state,key,id,meta={},previous){
@@ -32,7 +32,7 @@ window.RoundworkHistory=(()=>{
     const dates=[...exercises.map(x=>date(x.at)),date(session?.at)].filter(Boolean).sort((a,b)=>new Date(a)-new Date(b));
     const day=window.BOXING_DATA.days.find(d=>d.id===routine);
     const title=window.RoundworkSchedule.routine(day,{week:Number(week),recoveryDays:state.recoveryDays}).title;
-    return cleanRecord({week:Number(week),routine,title:previous?.title||meta.title||title,scheduledDay:previous?previous.scheduledDay:meta.scheduledDay,firstRecordedAt:previous?.firstRecordedAt||dates[0]||null,updatedAt:session?.updatedAt||dates.at(-1)||null,finishedAt:session?.at,settings:session?.settings||exercises.find(item=>item.settings)?.settings||previous?.settings||(!previous?meta.settings:null),readiness:session?.readiness||previous?.readiness||(!previous?meta.readiness:null),coachLoad:session?.coachLoad||previous?.coachLoad||(!previous?meta.coachLoad:null),prescription:session?.prescription||previous?.prescription||meta.prescription,exercises,customizations:state.sessionAdditions?.[key]||[],readinessCheck:state.readinessChecks?.[key]||session?.readinessCheck||previous?.readinessCheck,sessionEffort:session?.sessionEffort||previous?.sessionEffort,equipmentChecks:Object.fromEntries(Object.entries(state.equipmentChecks||{}).filter(([k])=>k.startsWith(key+':')))},id);
+    return cleanRecord({week:Number(week),routine,title:previous?.title||meta.title||title,performedDate:previous?.performedDate,sessionNotes:session?.sessionNotes??previous?.sessionNotes,scheduledDay:previous?previous.scheduledDay:meta.scheduledDay,firstRecordedAt:previous?.firstRecordedAt||dates[0]||null,updatedAt:session?.updatedAt||dates.at(-1)||null,finishedAt:session?.at,settings:session?.settings||exercises.find(item=>item.settings)?.settings||previous?.settings||(!previous?meta.settings:null),readiness:session?.readiness||previous?.readiness||(!previous?meta.readiness:null),coachLoad:session?.coachLoad||previous?.coachLoad||(!previous?meta.coachLoad:null),prescription:session?.prescription||previous?.prescription||meta.prescription,exercises,customizations:state.sessionAdditions?.[key]||[],readinessCheck:state.readinessChecks?.[key]||session?.readinessCheck||previous?.readinessCheck,sessionEffort:session&&Object.hasOwn(session,'sessionEffort')?session.sessionEffort:previous?.sessionEffort,equipmentChecks:Object.fromEntries(Object.entries(state.equipmentChecks||{}).filter(([k])=>k.startsWith(key+':')))},id);
   }
   function restore(state){
     const sessionHistory={},activeSessions={},sessionAdditions=window.RoundworkPerformance?.cleanAdditions(state.sessionAdditions)||{};
@@ -40,7 +40,7 @@ window.RoundworkHistory=(()=>{
     if(object(state.activeSessions))for(const [key,id] of Object.entries(state.activeSessions)){
       if(!keyPattern.test(key)||typeof id!=='string'||!idPattern.test(id))continue;
       const record=sessionHistory[id];
-      if(!record||(!record.closedAt&&record.week+':'+record.routine===key))activeSessions[key]=id;
+      if(!record||(!record.deletedAt&&!record.closedAt&&record.week+':'+record.routine===key))activeSessions[key]=id;
     }
     for(const [key,id] of Object.entries(activeSessions))if(!Object.hasOwn(sessionAdditions,key)&&sessionHistory[id]?.customizations?.length)sessionAdditions[key]=sessionHistory[id].customizations;
     const cleanState={...state,sessionHistory,activeSessions,sessionAdditions};
@@ -79,10 +79,53 @@ window.RoundworkHistory=(()=>{
     state.activeSessions={...state.activeSessions,[key]:newId(state)};
   }
   function records(state,week='all'){
-    return Object.values(state.sessionHistory||{}).filter(record=>week==='all'||record.week===Number(week)).sort((a,b)=>(b.performedDate||b.firstRecordedAt||'').localeCompare(a.performedDate||a.firstRecordedAt||'')||b.id.localeCompare(a.id));
+    return Object.values(state.sessionHistory||{}).filter(record=>!record.deletedAt&&(week==='all'||record.week===Number(week))).sort((a,b)=>(b.performedDate||b.firstRecordedAt||'').localeCompare(a.performedDate||a.firstRecordedAt||'')||b.id.localeCompare(a.id));
+  }
+  function clearWorking(state,key){
+    for(const name of ['logs','equipmentChecks'])state[name]=Object.fromEntries(Object.entries(state[name]||{}).filter(([k])=>!k.startsWith(key+':')));
+    for(const name of ['sessions','activeSessions','readinessChecks']){state[name]={...state[name]};delete state[name][key];}
+  }
+  function deleteRecords(state,ids){
+    const now=new Date().toISOString(),history={...state.sessionHistory};let count=0;
+    for(const id of new Set(ids)){const row=history[id];if(!row||row.deletedAt)continue;history[id]={...row,deletedAt:now,closedAt:row.closedAt||now};for(const [key,active]of Object.entries(state.activeSessions||{}))if(active===id)clearWorking(state,key);count++;}
+    state.sessionHistory=history;return count;
+  }
+  function deleteWeek(state,week){
+    if(!Number.isInteger(week)||week<1||week>8)return 0;
+    const count=deleteRecords(state,records(state,week).map(row=>row.id));
+    const keys=new Set([...Object.keys(state.sessions||{}),...Object.keys(state.activeSessions||{}),...Object.keys(state.readinessChecks||{}),...Object.keys(state.logs||{}).map(k=>k.split(':').slice(0,2).join(':'))]);
+    for(const key of keys)if(key.startsWith(week+':'))clearWorking(state,key);
+    return count;
+  }
+  function deletedRecords(state,week='all'){return Object.values(state.sessionHistory||{}).filter(row=>row.deletedAt&&(week==='all'||row.week===Number(week))).sort((a,b)=>b.deletedAt.localeCompare(a.deletedAt));}
+  function restoreDeleted(state,id){const row=state.sessionHistory?.[id];if(!row?.deletedAt)return false;state.sessionHistory={...state.sessionHistory,[id]:{...row,deletedAt:null,closedAt:row.closedAt||new Date().toISOString()}};return true;}
+  function editRecord(state,input){
+    const old=state.sessionHistory?.[input?.id],P=window.RoundworkPerformance,week=Number(input?.week),day=window.BOXING_DATA.days.find(d=>d.id===input?.routine),performedDate=input?.performedDate?P.dateOnly(input.performedDate):null;
+    if(!old||old.deletedAt||!Number.isInteger(week)||week<1||week>8||!day||!Array.isArray(input.exercises)||input.performedDate&&!performedDate||performedDate&&performedDate>P.today()||old.source==='manual'&&!performedDate)return null;
+    const customizations=P.definitions(input.customizations),slots=new Set(),exercises=[],now=new Date().toISOString();
+    for(const entry of input.exercises){if(!entry.performed)continue;const custom=customizations.find(row=>row.slot===entry.slot&&row.exercise===entry.exercise);if(slots.has(entry.slot)||(!known(entry.exercise)||!known(entry.slot)&&!/^extra-\d+$/.test(entry.slot))&&!custom)return null;slots.add(entry.slot);
+      const measured=entry.actual?P.actual(entry.actual):null;if(entry.actual&&!measured)return null;const prior=old.exercises.find(row=>row.slot===entry.slot&&row.exercise===entry.exercise);
+      exercises.push({slot:entry.slot,exercise:entry.exercise,customName:custom?.customName||'',section:custom?.section||null,at:prior?.at||now,settings:prior?.settings||null,dose:prior?.dose||{},actual:measured});
+    }
+    const oldKey=old.week+':'+old.routine,newKey=week+':'+day.id,active=state.activeSessions?.[oldKey]===old.id;
+    const record=cleanRecord({...old,week,routine:day.id,title:input.recovery?'Recovery':oldKey===newKey&&old.title!=='Recovery'?old.title:window.RoundworkSchedule.routine(day,{week:2,recoveryDays:{}}).title,performedDate,updatedAt:now,sessionNotes:input.sessionNotes,sessionEffort:input.sessionEffort,exercises,customizations,closedAt:active&&oldKey!==newKey?now:old.closedAt},old.id);
+    if(!record)return null;
+    if(active){
+      clearWorking(state,oldKey);
+      if(oldKey===newKey){
+        state.activeSessions[oldKey]=old.id;state.sessionAdditions={...state.sessionAdditions,[oldKey]:record.customizations};
+        for(const entry of record.exercises)state.logs[oldKey+':'+entry.slot]={exercise:entry.exercise,at:entry.at,settings:entry.settings,dose:entry.dose,actual:entry.actual};
+        state.equipmentChecks={...state.equipmentChecks,...record.equipmentChecks};
+        if(record.readinessCheck)state.readinessChecks[oldKey]=record.readinessCheck;
+        if(old.finishedAt)state.sessions[oldKey]={...(state.sessions?.[oldKey]||{}),at:old.finishedAt,updatedAt:now,settings:record.settings,readiness:record.readiness,coachLoad:record.coachLoad,prescription:record.prescription,readinessCheck:record.readinessCheck,sessionEffort:record.sessionEffort,sessionNotes:record.sessionNotes};
+        // Keep an explicitly empty partial entry as an archived record instead of recreating it from working state.
+        if(!old.finishedAt&&!record.exercises.length){delete state.activeSessions[oldKey];record.closedAt=now;}
+      }
+    }
+    state.sessionHistory={...state.sessionHistory,[old.id]:record};return record;
   }
   function visibleExercises(record){const replaced=new Set((record.customizations||[]).map(row=>row.replaces).filter(Boolean));return record.exercises.filter(entry=>!replaced.has(entry.slot));}
-  const pairs=[
+  const pairs=[["Update what you performed. Original prescription snapshots remain separate from actual work.","Actualiza lo que realizaste. El trabajo indicado originalmente se conserva separado del trabajo realizado."],["Dates performed are entered manually. Original recording timestamps are retained separately.","Las fechas de realización se introducen manualmente. Las fechas y horas originales de registro se conservan por separado."],["Edit session","Editar sesión"],["Edit saved session","Editar sesión guardada"],["Delete session","Eliminar sesión"],["Delete this session?","¿Eliminar esta sesión?"],["Clear week log","Vaciar registro semanal"],["Clear this week’s log?","¿Vaciar el registro de esta semana?"],["Sessions affected","Sesiones afectadas"],["Deleted sessions","Sesiones eliminadas"],["Restore session","Restaurar sesión"],["Session notes","Notas de la sesión"],["Remove exercise","Quitar ejercicio"],["Changes are saved only when you select Save changes. Editing the current session also updates its completion marks. Moving it to another week or routine keeps it as a historical entry and clears its previous working marks.","Los cambios se guardan solo al seleccionar Guardar cambios. Editar la sesión actual también actualiza sus marcas de realización. Moverla a otra semana o rutina la conserva como entrada histórica y borra sus marcas de trabajo anteriores."],["For existing app sessions, leave Date performed blank to retain only the original recording dates.","En las sesiones existentes de la app, deja la fecha de realización en blanco para conservar solo las fechas originales de registro."],["Choose a routine and a valid date no later than today. New or manually entered sessions require a date. Check the exercise entries and try again.","Elige una rutina y una fecha válida hasta hoy. Las sesiones nuevas o introducidas manualmente requieren fecha. Revisa los ejercicios e inténtalo de nuevo."],["These entries will move to Deleted sessions and leave the weekly totals and comparisons. You can restore them later on this device.","Estas entradas pasarán a Sesiones eliminadas y saldrán de los totales semanales y las comparaciones. Puedes restaurarlas después en este dispositivo."],["For a current session, its working completion marks, actuals and equipment checks are cleared. Your routine choices, schedule and gym inventory stay selected.","En una sesión actual se borran sus marcas de realización, datos realizados y comprobaciones de equipo. Se conservan las rutinas elegidas, el horario y el inventario del gimnasio."],["This clears the selected numbered training week, including entries recorded on different calendar dates.","Esto vacía la semana de entrenamiento numerada seleccionada, incluidas las entradas registradas en distintas fechas del calendario."],["Select a training week to clear its log.","Selecciona una semana de entrenamiento para vaciar su registro."],["Deletion could not be saved. Your entries have been kept.","No se pudo guardar la eliminación. Se conservaron tus entradas."],["Entries moved to Deleted sessions.","Entradas trasladadas a Sesiones eliminadas."],["Restoring adds a historical entry to the log. It does not replace your current workout or its checkmarks.","Restaurar añade una entrada histórica al registro. No sustituye tu entrenamiento actual ni sus marcas."],["Deleted entries remain on this device and in exported backups until you remove the app data.","Las entradas eliminadas permanecen en este dispositivo y en las copias exportadas hasta que borres los datos de la app."],["Session restored as a historical entry.","Sesión restaurada como entrada histórica."],
     ['Log','Registro'],['Training log','Registro de entrenamiento'],['Weekly overview','Resumen semanal'],['All training weeks','Todas las semanas de entrenamiento'],['Training week','Semana de entrenamiento'],
     ['Saved sessions','Sesiones guardadas'],['Open or partial sessions','Sesiones abiertas o parciales'],['Exercises marked done','Ejercicios marcados como hechos'],['Session details','Detalles de la sesión'],
     ['Saved session','Sesión guardada'],['In progress','En curso'],['Partial session','Sesión parcial'],['Current session','Sesión actual'],
@@ -102,5 +145,5 @@ window.RoundworkHistory=(()=>{
   for(let week=1;week<=8;week++)pairs.push(['Week '+week,'Semana '+week]);
   for(const [en,es] of pairs)window.ROUNDWORK_ES[en]=es;
   window.ROUNDWORK_HISTORY_TEXT=pairs.map(pair=>pair[0]);
-  return {cleanRecord,restore,hasWork,checkpoint,startAnother,records,newId,visibleExercises};
+  return {cleanRecord,restore,hasWork,checkpoint,startAnother,records,newId,visibleExercises,deleteRecords,deleteWeek,deletedRecords,restoreDeleted,editRecord};
 })();

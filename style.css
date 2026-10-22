@@ -115,3 +115,6 @@
 
 /* Selection-specific warm-up feedback. */
 .warmup-feedback{margin:12px 0 20px;padding:16px;border:1px solid #c8d0b7;border-radius:10px;background:#f4f6ed;grid-column:1/-1}.warmup-feedback>strong{display:block;font-size:14px}.warmup-feedback p{font-size:13px;line-height:1.65;margin:10px 0}.warmup-feedback .readiness-adjustments{margin:12px 0 0;padding:12px;background:#e7ecd9}.warmup-feedback .readiness-adjustments h3{font-size:15px}.warmup-feedback li{font-size:13px;line-height:1.6}
+
+/* Log editing and recoverable deletion. */
+.log-management{padding:16px;margin:16px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.log-management p,.deleted-sessions p{font-size:13px;line-height:1.6}.danger-text{color:#a32b16}.button-danger{background:#a32b16;color:#fff;border-color:#a32b16}.deleted-sessions{margin:25px 0;padding:20px;border:1px solid var(--line);border-radius:12px}.deleted-sessions summary{font-weight:800;cursor:pointer}.deleted-session{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid var(--line)}.deleted-session p{margin:6px 0}.session-log-notes{white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:560px){.deleted-session{align-items:flex-start;flex-direction:column}.history-actions{flex-wrap:wrap}.log-management .button{width:100%}}
