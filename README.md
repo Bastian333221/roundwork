@@ -1,4 +1,6 @@
-# ROUNDWORK 1.10.0
+# ROUNDWORK 1.10.1
+
+Warm-up feedback now explains the selected response directly beneath the menu and shows the current exercise set changes and omissions there. The unanswered state is a disabled placeholder, not a selectable workout response. Existing pending records remain compatible. Coaching, recovery, missing initial readiness and pain/illness overrides are described without claiming gym adjustments that are not applied. Training rules and stored record formats are unchanged.
 
 The readiness update adds a check for each session, fatigue reasons and affected areas, a post-warm-up response, and a separate pause for pain, injury concerns or feeling unwell. Recent hard boxing and week-specific coaching confirmations govern conditioning. Readiness is applied once before the time-budget trim: general fatigue reduces three-set main lifts to two, preserves two-set main lifts for experienced levels, reduces accessory work, retains full rests and limits easy cardio. Rookie uses easier work with at least four repetitions in reserve. Power waits for a normal warm-up; reduced sessions omit demanding conditioning. Start another session resets the check. Saved logs and backups retain the initial/final selection, reasons, warm-up result and optional session effort rating. The precise rules are programming choices and have not been clinically validated.
 

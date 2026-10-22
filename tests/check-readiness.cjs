@@ -3,6 +3,34 @@ function fixture(store={}){const elements=new Map(),events={};let rows=[];const 
 for(const file of ['data.js','es.js','es-ui.js','evidence.js','videos.js','planner.js','planner-ui.js','choices.js','schedule.js','history.js','performance.js','performance-ui.js','customization-ui.js','readiness.js','custom-guides.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx);
 const app=fs.readFileSync(path.join(base,'app.js'),'utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/,'window.test={currentSession,getDose,historyMeta,persist,readinessUI,customGuideUI,customizationUI,performanceUI,historyCard,renderSession,getState:()=>state};\n})();');vm.runInContext(app,ctx);return {T:ctx.window.test,ctx,get,store,doc,events,rows:v=>rows=v,click:dataset=>{const b={...el(),dataset,hasAttribute:()=>false};b.closest=()=>b;for(const f of events.click||[])f({target:b})}};}
 const f=fixture(),{T,ctx,get}=f,R=ctx.window.RoundworkReadiness,H=ctx.window.RoundworkHistory,P=ctx.window.RoundworkPerformance,G=ctx.window.RoundworkCustomGuides,s=T.getState();
+// Selection feedback must explain the actual branch, including overrides.
+{
+ const q=fixture(),state=q.T.getState(),r=q.ctx.window.RoundworkReadiness;
+ state.week=2;state.day='mon';state.coachLoads={2:'technical'};state.equipment=Object.fromEntries(q.ctx.window.BOXING_DATA.equipment.map(x=>[x.id,'yes']));state.sessionSettings={'2:mon':{level:'intermediate',minutes:120}};
+ const panel=()=>q.T.readinessUI.panel(q.T.currentSession());
+ ok(panel().includes('value="pending" disabled selected')&&panel().includes('Select your warm-up response'),'Unanswered warm-up is a disabled placeholder');
+ ok(!panel().includes('>Not checked yet</option>'),'Pending is not an actionable workout response');
+ ok(panel().includes('stay off until you answer Normal'),'Unanswered feedback describes power and conditioning gate');
+ r.set(state,{choice:'normal',warmup:'normal'});
+ ok(panel().includes('Your Ready to train selection is retained')&&panel().includes('weights do not increase automatically'),'Normal ready response explains standard plan without automatic load increases');
+ ok(panel().includes('Demanding conditioning is available where prescribed'),'Confirmed light load explains conditional conditioning availability');
+ r.set(state,{choice:'tired'});
+ ok(panel().includes('Your Feeling tired selection is retained')&&panel().includes('session stays reduced'),'Normal warm-up does not erase tired choice');
+ ok(panel().includes('Prescribed rests are retained')&&panel().includes('Demanding conditioning is omitted'),'Reduced feedback explains rest and conditioning');
+ r.set(state,{choice:'normal',warmup:'harder'});
+ ok(panel().includes('Harder than usual applies the reduced plan')&&panel().includes('Explosive work stays off'),'Harder response explains override and power omission');
+ q.T.renderSession();const html=q.get('main').innerHTML;
+ ok(html.includes('warmup-feedback')&&html.indexOf('warmup-feedback')<html.indexOf('readiness-adjustments')&&html.indexOf('readiness-adjustments')<html.indexOf('class="coach-settings"'),'Actual exercise changes are placed beneath the warm-up dropdown');
+ ok((html.match(/class="readiness-adjustments"/g)||[]).length===1,'Exercise change summary is not duplicated farther down the page');
+ ok(q.T.readinessUI.panel(q.T.currentSession(),'<section class="readiness-adjustments">3 → 2</section>').includes('3 → 2'),'Exercise-level changes can be displayed inside warm-up feedback');
+ r.set(state,{warmup:'normal',recentBoxing:'hard'});ok(panel().includes('still requires confirmed light coaching'),'Recent hard boxing keeps conditioning restriction visible');
+ r.set(state,{warmup:'uncomfortable'});ok(panel().includes('pauses the prescribed workout')&&panel().includes('Stop the planned workout'),'Uncomfortable response explains pause');
+ r.set(state,{warmup:'normal',concern:true});ok(panel().includes('overrides this warm-up response')&&!panel().includes('standard plan for your level'),'Pain override takes precedence over normal response');
+ r.reset(state,'2:mon');r.set(state,{warmup:'normal'});ok(panel().includes('Select Ready to train or Feeling tired above')&&!panel().includes('Your Ready to train selection is retained'),'Missing readiness is not misrepresented as standard');
+ state.day='thu';r.set(state,{choice:'normal',warmup:'normal'});q.T.renderSession();ok(panel().includes('Your coach directs the workout')&&!panel().includes('fewer sets'),'Coached session does not claim gym adjustments');
+ state.recoveryDays={'2:mon':true};state.day='mon';q.T.renderSession();ok(panel().includes('This is a recovery day'),'Recovery feedback does not claim new gym work');
+ for(const en of q.ctx.window.ROUNDWORK_READINESS_TEXT)ok(q.ctx.window.ROUNDWORK_ES[en],'Feedback text has a Spanish translation');
+}
 s.week=2;s.day='mon';s.equipment=Object.fromEntries(ctx.window.BOXING_DATA.equipment.map(x=>[x.id,'yes']));s.sessionSettings={'2:mon':{level:'intermediate',minutes:120}};s.coachLoads={2:'technical'};
 ok(R.context(s).readinessMode==='unconfirmed','New session requires a fresh readiness choice');ok(T.currentSession().items.filter(x=>x.conditioning).every(x=>x.adaptedDose.skip),'Unconfirmed readiness does not enable demanding conditioning');
 R.set(s,{choice:'normal',warmup:'normal'});let plan=T.currentSession();const find=id=>plan.items.find(x=>x.exercise===id)?.adaptedDose;
