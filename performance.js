@@ -92,6 +92,7 @@ window.RoundworkPerformance=(()=>{
     if(!performedDate||performedDate>today()||!Number.isInteger(week)||week<1||week>8||!day||!Array.isArray(input.exercises))return null;
     const old=input.id&&state.sessionHistory?.[input.id];
     if(input.id&&old?.source!=='manual')return null;
+    if(Object.hasOwn(input,'settings')&&input.settings!==null&&!window.RoundworkHistory.recordSettings(input.settings,day.id))return null;
     const id=old?.id||window.RoundworkHistory.newId(state),now=new Date().toISOString(),seen=new Set(),slots=new Set(),exercises=[],customizations=definitions(input.customizations);
     for(const entry of input.exercises){
       if(!entry.performed)continue;
@@ -104,7 +105,7 @@ window.RoundworkPerformance=(()=>{
       const previous=old?.exercises.find(ex=>ex.slot===slot&&ex.exercise===entry.exercise);
       exercises.push({slot,exercise:entry.exercise,customName:custom?.customName||'',section:custom?.section||null,at:previous?.at||now,settings:null,dose:{},actual:measured});
     }
-    const record=window.RoundworkHistory.cleanRecord({id,week,routine:day.id,title:input.recovery?'Recovery':window.RoundworkSchedule.routine(day,{week:2,recoveryDays:{}}).title,source:'manual',performedDate,enteredAt:old?.enteredAt||now,firstRecordedAt:old?.firstRecordedAt||now,updatedAt:now,finishedAt:old?.finishedAt||now,closedAt:old?.closedAt||now,settings:null,exercises,customizations:customizations.filter(row=>exercises.some(entry=>entry.slot===row.slot)),prescription:[],readinessCheck:old?.readinessCheck,sessionEffort:input.sessionEffort??old?.sessionEffort,sessionNotes:input.sessionNotes??old?.sessionNotes,equipmentChecks:{}},id);
+    const record=window.RoundworkHistory.cleanRecord({id,week,routine:day.id,title:input.recovery?'Recovery':window.RoundworkSchedule.routine(day,{week:2,recoveryDays:{}}).title,source:'manual',performedDate,enteredAt:old?.enteredAt||now,firstRecordedAt:old?.firstRecordedAt||now,updatedAt:now,finishedAt:old?.finishedAt||now,closedAt:old?.closedAt||now,settings:Object.hasOwn(input,'settings')?input.settings:old?.settings||null,exercises,customizations:customizations.filter(row=>exercises.some(entry=>entry.slot===row.slot)),prescription:[],readinessCheck:old?.readinessCheck,sessionEffort:input.sessionEffort??old?.sessionEffort,sessionNotes:input.sessionNotes??old?.sessionNotes,equipmentChecks:{}},id);
     if(!record)return null;
     state.sessionHistory={...state.sessionHistory,[id]:record};return record;
   }
