@@ -1,4 +1,4 @@
-# ROUNDWORK 1.12.0 automatic workout-log sync
+# ROUNDWORK 1.12.1 automatic workout-log sync
 
 Configuration and validation recorded on 21 November 2026.
 
@@ -33,9 +33,9 @@ Only the project URL and publishable key are included in the client. Authenticat
 
 ## Verification
 - 76 sync core/controller checks.
-- 104 account/UI checks, including password registration/login, confirmation, alternative email/code, Spanish, consent, recovery, disconnect and downloaded-guide behavior.
-- Existing app, language, video, planner/choices, history, performance, customization, readiness and log-management suites passed after the release update.
-- Sign-in layout inspected at 390 x 844 and 1280 x 900, in English and Spanish.
+- 160 account/UI checks, including password registration/login, confirmation, alternative email/code, Spanish, consent, recovery, disconnect and downloaded-guide behavior.
+- v1.12.0 passed the full app, language, video, planner/choices, history, performance, customization, readiness and log-management suites. For the v1.12.1 recovery addition, sync core (76), account/UI (160), app (401), language (3431), video (692) and log-management (78) checks were rerun and passed.
+- Sign-in and recovery request layouts inspected at 390 x 844 and 1280 x 900, in English and Spanish. A freshly opened expired-link error also displayed its new-email recovery path.
 - Independent-store simulations cover upload/download, concurrency, offline retry, edits during upload, deletion recovery, storage failure and account boundaries.
 - Older test storage mocks now return previous writes, matching real localStorage behavior and stale-tab protection.
 
@@ -54,3 +54,8 @@ Public repository/source ZIP: app at root, backend/, SYNC-STATUS.md, sync-toolin
 - https://supabase.com/docs/guides/auth/auth-email-templates
 - https://supabase.com/docs/guides/database/postgres/row-level-security
 - https://supabase.com/docs/guides/database/functions
+
+## Password/account recovery addition
+Forgot-password email uses resetPasswordForEmail with the existing allowlisted base return URL. PASSWORD_RECOVERY opens the new-password form. updateUser changes the authenticated account password after confirmation and minimum-length checks. The sync engine receives no recovery identity until a successful update; its existing account boundary still applies afterward. Session storage remembers only the recovery owner for a reload; no additional password/token is saved in workout state or exports. Expired/missing/owner-mismatched recovery sessions, request failures, weak passwords and cancellation have regression coverage. Gmail recovery is linked when email access is lost. Real recovery-email delivery and a real password change have not been performed for this release.
+
+Recovery API reference: https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail

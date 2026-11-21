@@ -1,4 +1,4 @@
-# ROUNDWORK 1.12.0
+# ROUNDWORK 1.12.1
 
 An English/Spanish boxing gym companion for Android, iPhone and desktop browsers. The boxing-focused gym weeks adapt to level, time, equipment and recovery. The established lifting-week routine is unchanged.
 
@@ -25,6 +25,12 @@ Distinct sessions merge by identity. Concurrent edits to the same session retain
 A local recovery copy is verified before the first cloud merge. Export/import remains available for manual recovery. Disconnect sync before replacing browser data with a backup; reconnection merges the imported history with cloud records. Signing out keeps downloaded workouts in the browser. Use trusted devices. The app refuses to upload an existing account's browser history into a different account.
 
 Supabase's default email provider is currently configured. It sends verification emails only to Supabase organization members and has a low email-send limit. Configure custom SMTP before offering account creation to other users. No paid plan was enabled for this feature. The deployed project settings and live verification results are recorded in SYNC-STATUS.md (beside dist in the saved project).
+
+## Recover password or account access
+
+Open Sync & devices and choose Forgot password or need account access?. Enter the existing account email and select Send recovery email. Open the latest email link, choose and confirm a new password, then save it. A valid authenticated recovery session is required; expired links offer a new-email request. Sync pauses during the password update. Workout records are not used to store passwords or recovery tokens.
+
+For access without a password, the sign-in email option is still available. If email access is lost, recover the email account through its provider first. The in-app help links to Gmail recovery and advises exporting a workout backup from any trusted device that is still signed in. A new account does not automatically inherit another account's cloud records. Default email-provider delivery restrictions apply to recovery emails as well.
 
 ## Data and access
 

@@ -135,3 +135,6 @@
 .sync-dialog .icon-button{min-width:44px;min-height:44px;flex-shrink:0}
 
 .sync-email-alternative{margin-block:20px}.sync-email-alternative>summary{min-height:44px;padding-block:12px;cursor:pointer;font-size:16px;line-height:1.5;font-weight:700}.sync-dialog #sync-password-form .sync-actions{margin-block:0}.sync-dialog #sync-password-help{margin:0}
+
+/* Account recovery uses the existing sync form rhythm. */
+.auth-recovery-link{display:block;margin-block:0;justify-self:start}.auth-recovery-help{margin-block-start:24px;border-top:1px solid var(--line);padding-block-start:16px}.auth-recovery-help summary{font-size:16px;font-weight:700;min-height:44px;cursor:pointer}.sync-dialog #auth-recovery h3{font-size:22px;line-height:1.3;margin-block:12px 20px}.sync-dialog #auth-recovery-message:empty{display:none}

@@ -1,18 +1,19 @@
 const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert'),base=path.join(__dirname,'..');let checks=0;
 const ok=(value,label)=>{assert(value,label);checks++;},noop=()=>{};
-function fixture(protocol='https:'){
+function fixture(protocol='https:',options={}){
   const nodes=new Map(),events={},saved={},created={},data={sessionHistory:{},activeSessions:{},logs:{},sessions:{},equipmentChecks:{},sessionAdditions:{},readinessChecks:{}};
-  const make=()=>({hidden:false,value:'',textContent:'',innerHTML:'',id:'',dataset:{},open:false,disabled:false,setAttribute:noop,addEventListener:noop,insertBefore:noop,before:noop,focus:noop,reportValidity:()=>true,showModal(){this.open=true;},close(){this.open=false;}});
+  const make=()=>({hidden:false,value:'',textContent:'',innerHTML:'',id:'',dataset:{},open:false,disabled:false,classList:{toggle:noop},setAttribute:noop,addEventListener:noop,insertBefore:noop,appendChild:noop,before:noop,focus:noop,reportValidity:()=>true,showModal(){this.open=true;},close(){this.open=false;}});
   const get=s=>{if(!nodes.has(s))nodes.set(s,make());return nodes.get(s);};
-  const document={hidden:false,querySelector:get,createElement(tag){const e=make();if(tag==='dialog')created.dialog=e;return e;},body:{appendChild:noop},addEventListener(name,fn){(events[name]??=[]).push(fn);}};
-  const localStorage={getItem:k=>saved[k]||null,setItem:(k,v)=>{saved[k]=v;}},calls={create:0,otp:[],verify:[],signout:[],signup:[],password:[]};let callback;
-  const client={auth:{onAuthStateChange(fn){callback=fn;return {data:{subscription:{unsubscribe:noop}}};},async getSession(){return {data:{session:null}};},async signUp(input){calls.signup.push(input);return {data:{session:null,user:{id:'ui-user',email:input.email}},error:null};},async signInWithPassword(input){calls.password.push(input);const session={user:{id:'ui-user',email:input.email}};callback('SIGNED_IN',session);return {data:{session},error:null};},async signInWithOtp(input){calls.otp.push(input);return {error:null};},async verifyOtp(input){calls.verify.push(input);callback('SIGNED_IN',{user:{id:'ui-user',email:input.email}});return {data:{},error:null};},async signOut(input){calls.signout.push(input);callback('SIGNED_OUT',null);return {error:null};}},from(){return {select(){return {eq(){return {async maybeSingle(){return {data:null,error:null};}};}};}};},async rpc(){return {data:{saved:true,revision:1},error:null};}};
+  const document={hidden:false,querySelector:get,createElement(tag){const e=make();Object.defineProperty(e,'id',{get(){return this.nodeId||'';},set(value){this.nodeId=value;nodes.set('#'+value,this);}});if(tag==='dialog')created.dialog=e;return e;},body:{appendChild:noop},addEventListener(name,fn){(events[name]??=[]).push(fn);}};
+  const localStorage={getItem:k=>saved[k]||null,setItem:(k,v)=>{saved[k]=v;}},calls={create:0,otp:[],verify:[],signout:[],signup:[],password:[],reset:[],update:[]};let callback;
+  const client={auth:{onAuthStateChange(fn){callback=fn;return {data:{subscription:{unsubscribe:noop}}};},async getSession(){return options.initialError?{error:{message:'Synthetic session error'}}:{data:{session:options.session||null}};},async resetPasswordForEmail(email,input){calls.reset.push({email,input});return {data:{},error:null};},async updateUser(input){calls.update.push(input);callback('USER_UPDATED',{user:{id:'ui-user',email:'person@example.test'}});return {data:{user:{id:'ui-user',email:'person@example.test'}},error:null};},async signUp(input){calls.signup.push(input);return {data:{session:null,user:{id:'ui-user',email:input.email}},error:null};},async signInWithPassword(input){calls.password.push(input);const session={user:{id:'ui-user',email:input.email}};callback('SIGNED_IN',session);return {data:{session},error:null};},async signInWithOtp(input){calls.otp.push(input);return {error:null};},async verifyOtp(input){calls.verify.push(input);callback('SIGNED_IN',{user:{id:'ui-user',email:input.email}});return {data:{},error:null};},async signOut(input){calls.signout.push(input);callback('SIGNED_OUT',null);return {error:null};}},from(){return {select(){return {eq(){return {async maybeSingle(){return {data:null,error:null};}};}};}};},async rpc(){return {data:{saved:true,revision:1},error:null};}};
   const window={ROUNDWORK_ES:{},ROUNDWORK_SYNC_CONFIG:{supabaseUrl:'https://test-project.supabase.co',publishableKey:'sb_publishable_test'},RoundworkSupabase:{createClient(){calls.create++;return client;}},RoundworkStore:{getState:()=>data,canApplySync:()=>true,applySync(records){data.sessionHistory=records;return true;}},addEventListener:noop};
   window.RoundworkI18n={language:'en',translate(text){return this.language==='es'?window.ROUNDWORK_ES[text]||text:text;}};
-  const ctx={window,document,localStorage,navigator:{onLine:true},location:{protocol,href:protocol==='file:'?'file:///C:/Roundwork.html':'https://example.test/roundwork/'},console,Date,URL,Blob,Map,Set,setTimeout:()=>1,clearTimeout:noop,AbortSignal,fetch:()=>{throw Error('No network requests allowed in UI fixture');}};
+  const sessionSaved={...(options.sessionSaved||{})},sessionStorage={getItem:k=>sessionSaved[k]||null,setItem:(k,v)=>sessionSaved[k]=v,removeItem:k=>delete sessionSaved[k]};
+  const ctx={window,document,localStorage,sessionStorage,URLSearchParams,navigator:{onLine:true},location:{protocol,href:protocol==='file:'?'file:///C:/Roundwork.html':options.href||'https://example.test/roundwork/'},console,Date,URL,Blob,Map,Set,setTimeout:()=>1,clearTimeout:noop,AbortSignal,fetch:()=>{throw Error('No network requests allowed in UI fixture');}};
   vm.createContext(ctx);
-  for(const file of ['data.js','es.js','es-ui.js','evidence.js','planner.js','planner-ui.js','choices.js','schedule.js','history.js','performance.js','readiness.js','sync-core.js','sync-engine.js','sync-ui.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx);
-  return {get,created,calls,ctx,window,saved,data,events,client,auth:(event,session)=>callback(event,session)};
+  for(const file of ['data.js','es.js','es-ui.js','evidence.js','planner.js','planner-ui.js','choices.js','schedule.js','history.js','performance.js','readiness.js','sync-core.js','sync-engine.js','auth-recovery.js','sync-ui.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx);
+  return {get,created,calls,ctx,window,saved,sessionSaved,data,events,client,auth:(event,session)=>callback(event,session)};
 }
 (async()=>{
   const f=fixture();await Promise.resolve();await Promise.resolve();
@@ -50,6 +51,58 @@ function fixture(protocol='https:'){
   await unconfirmed.get('#sync-password-form').onsubmit({preventDefault:noop});ok(unconfirmed.get('#sync-auth-message').textContent.includes('Confirm your email')&&unconfirmed.window.RoundworkSync.getStatus().phase==='signed-out','Unconfirmed email cannot enable account sync');
   unconfirmed.client.auth.signInWithPassword=async()=>({error:{code:'invalid_credentials'}});
   await unconfirmed.get('#sync-password-form').onsubmit({preventDefault:noop});ok(unconfirmed.get('#sync-auth-message').textContent.includes('could not be verified'),'Incorrect credentials show a recoverable sign-in error');
+
+  const reset=fixture();await Promise.resolve();await Promise.resolve();
+  reset.get('#sync-email').value='person@example.test';reset.get('#auth-forgot').onclick();
+  ok(!reset.get('#auth-recovery-request').hidden&&reset.get('#sync-signin').hidden,'Forgot-password control opens dedicated email form');
+  ok(reset.get('#auth-recovery-email').value==='person@example.test','Recovery pre-fills entered email');
+  const beforeRequest=JSON.stringify(reset.data);
+  await reset.get('#auth-recovery-email-form').onsubmit({preventDefault:noop});
+  ok(reset.calls.reset[0].email==='person@example.test'&&reset.calls.reset[0].input.redirectTo==='https://example.test/roundwork/','Reset API uses entered email and allowlisted return URL');
+  ok(reset.get('#auth-recovery-message').textContent.startsWith('If an account exists'),'Recovery response does not confirm account existence');
+  ok(JSON.stringify(reset.data)===beforeRequest&&reset.calls.signup.length===0,'Recovery request leaves workouts unchanged and does not create an account');
+  reset.client.auth.resetPasswordForEmail=async()=>({error:{status:429}});
+  await reset.get('#auth-recovery-email-form').onsubmit({preventDefault:noop});ok(reset.get('#auth-recovery-message').textContent.includes('Wait'),'Rate-limit message asks user to wait');
+  reset.client.auth.resetPasswordForEmail=async()=>{throw Error('Synthetic offline');};
+  await reset.get('#auth-recovery-email-form').onsubmit({preventDefault:noop});ok(reset.get('#auth-recovery-message').textContent.includes('connection'),'Recovery request handles offline failure');
+  reset.get('#auth-recovery-back').onclick();ok(!reset.get('#sync-signin').hidden&&reset.get('#auth-recovery-request').hidden,'Back restores normal sign-in');
+  reset.auth('PASSWORD_RECOVERY',{user:{id:'ui-user',email:'person@example.test'}});
+  ok(reset.created.dialog.open&&!reset.get('#auth-recovery-reset').hidden&&reset.get('#sync-account').hidden,'PASSWORD_RECOVERY opens reset instead of account controls');
+  ok(reset.window.RoundworkSync.getStatus().user===null,'Recovery identity is withheld from workout sync');
+  ok(JSON.parse(reset.sessionSaved['roundwork.password-recovery.v1']).owner==='ui-user','Recovery reload marker stores owner only');
+  const originalHistory=JSON.stringify(reset.data);
+  reset.get('#auth-new-password').value='short';reset.get('#auth-confirm-password').value='short';
+  await reset.get('#auth-recovery-reset-form').onsubmit({preventDefault:noop});ok(reset.calls.update.length===0,'Short password does not reach update API');
+  reset.get('#auth-new-password').value='Synthetic-new-password-2049';reset.get('#auth-confirm-password').value='different';
+  await reset.get('#auth-recovery-reset-form').onsubmit({preventDefault:noop});ok(reset.calls.update.length===0&&reset.get('#auth-recovery-message').textContent.includes('not match'),'Mismatch does not update password');
+  reset.get('#auth-confirm-password').value='Synthetic-new-password-2049';
+  await reset.get('#auth-recovery-reset-form').onsubmit({preventDefault:noop});
+  ok(reset.calls.update[0].password==='Synthetic-new-password-2049','Matching password uses authenticated updateUser');
+  ok(reset.get('#auth-new-password').value===''&&reset.get('#auth-confirm-password').value===''&&!reset.sessionSaved['roundwork.password-recovery.v1'],'Success clears passwords and marker');
+  ok(reset.window.RoundworkSync.getStatus().phase==='consent'&&!reset.get('#sync-account').hidden,'Verified update returns to normal sync consent');
+  ok(reset.get('#sync-auth-message').textContent.startsWith('Password updated.'),'Successful update is visible');
+  ok(JSON.stringify(reset.data)===originalHistory&&!JSON.stringify(reset.saved).includes('Synthetic-new-password'),'Recovery leaves history unchanged and passwords out of workout storage');
+  const continued=fixture('https:',{sessionSaved:{'roundwork.password-recovery.v1':JSON.stringify({owner:'ui-user'})},session:{user:{id:'ui-user',email:'person@example.test'}}});await Promise.resolve();await Promise.resolve();
+  ok(!continued.get('#auth-recovery-reset').hidden&&continued.window.RoundworkSync.getStatus().user===null,'Reload resumes only the matching owner with sync paused');
+  const wrongOwner=fixture('https:',{sessionSaved:{'roundwork.password-recovery.v1':JSON.stringify({owner:'another-user'})},session:{user:{id:'ui-user',email:'person@example.test'}}});await Promise.resolve();await Promise.resolve();
+  ok(wrongOwner.get('#auth-recovery-reset').hidden&&wrongOwner.get('#auth-recovery-message').textContent.includes('expired'),'Wrong-owner marker cannot open password reset');
+  const forged=fixture('https:',{href:'https://example.test/roundwork/#type=recovery',session:{user:{id:'ui-user',email:'person@example.test'}}});await Promise.resolve();await Promise.resolve();
+  ok(forged.get('#auth-recovery-reset').hidden,'Fragment alone is not an authenticated recovery event');
+  const expired=fixture('https:',{href:'https://example.test/roundwork/#error=access_denied&error_code=otp_expired'});await Promise.resolve();await Promise.resolve();
+  ok(expired.created.dialog.open&&!expired.get('#auth-recovery-request').hidden&&expired.get('#auth-recovery-message').textContent.includes('expired'),'Expired link opens request-new-email path');
+  const failedReset=fixture();await Promise.resolve();await Promise.resolve();failedReset.auth('PASSWORD_RECOVERY',{user:{id:'ui-user'}});
+  failedReset.get('#auth-new-password').value='Synthetic-new-password-2049';failedReset.get('#auth-confirm-password').value='Synthetic-new-password-2049';failedReset.client.auth.updateUser=async()=>({error:{status:401}});
+  await failedReset.get('#auth-recovery-reset-form').onsubmit({preventDefault:noop});ok(failedReset.get('#auth-recovery-reset').hidden&&failedReset.get('#auth-recovery-message').textContent.includes('expired'),'Expired session cannot report successful reset');
+  const retryReset=fixture();await Promise.resolve();await Promise.resolve();retryReset.auth('PASSWORD_RECOVERY',{user:{id:'ui-user'}});
+  retryReset.get('#auth-new-password').value='Synthetic-new-password-2049';retryReset.get('#auth-confirm-password').value='Synthetic-new-password-2049';retryReset.client.auth.updateUser=async()=>({error:{code:'weak_password'}});
+  await retryReset.get('#auth-recovery-reset-form').onsubmit({preventDefault:noop});ok(!retryReset.get('#auth-recovery-reset').hidden&&retryReset.get('#auth-recovery-message').textContent.includes('stronger'),'Policy rejection permits correction in reset form');
+  await retryReset.get('#auth-recovery-cancel').onclick();ok(retryReset.calls.signout.at(-1).scope==='local'&&!retryReset.sessionSaved['roundwork.password-recovery.v1']&&!retryReset.get('#sync-signin').hidden,'Cancel signs out locally and clears recovery mode');
+  const recoverySource=fs.readFileSync(path.join(base,'auth-recovery.js'),'utf8');
+  ok(recoverySource.includes('https://accounts.google.com/signin/recovery')&&recoverySource.includes('export your workout backup'),'No-email help includes provider recovery and backup preservation');
+  for(const text of reset.window.RoundworkAuthRecovery.text)ok(reset.window.ROUNDWORK_ES[text]&&reset.window.ROUNDWORK_ES[text]!==text,'Recovery Spanish translation: '+text);
+  const sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');ok(sw.includes('auth-recovery.js'),'Offline shell includes recovery interface');
+  const index=fs.readFileSync(path.join(base,'index.html'),'utf8');ok(index.indexOf('auth-recovery.js')<index.indexOf('sync-ui.js'),'Recovery helper loads before sync controls');
+
   const file=fixture('file:');await Promise.resolve();
   ok(file.calls.create===0&&file.window.RoundworkSync.getStatus().phase==='local-file','Downloaded HTML does not attempt unsupported file-based authentication');
   ok(file.get('#sync-signin').hidden&&!file.get('#sync-local-file').hidden,'Downloaded guide directs sync users to hosted app');
