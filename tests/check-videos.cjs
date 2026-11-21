@@ -1,10 +1,11 @@
+const mockStorage={};
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const base=path.join(__dirname,'..');let checks=0;
 const ok=(x,msg)=>{assert(x,msg);checks++};
 const el=()=>({addEventListener:()=>{},classList:{add:()=>{},remove:()=>{},toggle:()=>{}},setAttribute:()=>{},focus:()=>{},textContent:'',innerHTML:'',hidden:false});
 const elements=new Map(), get=s=>{if(!elements.has(s))elements.set(s,el());return elements.get(s)};
 const document={getElementById:s=>get('#'+s),querySelector:get,querySelectorAll:()=>[],body:{style:{},querySelectorAll:()=>[]},documentElement:{},createTreeWalker:()=>({nextNode:()=>null}),addEventListener:()=>{},dispatchEvent:()=>{}};
-const context={window:{scrollTo:()=>{}},document,localStorage:{getItem:()=>null,setItem:()=>{}},NodeFilter:{SHOW_TEXT:4},MutationObserver:class{observe(){}},CustomEvent:class{},location:{hash:''},history:{replaceState:()=>{}},setInterval:()=>{},clearInterval:()=>{},setTimeout:()=>{},clearTimeout:()=>{},console,URL,Date,Map,Set,navigator:{onLine:true}};vm.createContext(context);
+const context={window:{scrollTo:()=>{}},document,localStorage:{getItem:key=>mockStorage[key]??null,setItem:(key,value)=>mockStorage[key]=value},NodeFilter:{SHOW_TEXT:4},MutationObserver:class{observe(){}},CustomEvent:class{},location:{hash:''},history:{replaceState:()=>{}},setInterval:()=>{},clearInterval:()=>{},setTimeout:()=>{},clearTimeout:()=>{},console,URL,Date,Map,Set,navigator:{onLine:true}};vm.createContext(context);
 for(const file of ['data.js','es.js','es-ui.js','evidence.js','videos.js','choices.js','schedule.js','history.js','performance.js','performance-ui.js','customization-ui.js','readiness.js','custom-guides.js','i18n.js','diagrams.js','choices-diagrams.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),context);
 const {BOXING_DATA:D,ROUNDWORK_VIDEOS:V,RoundworkI18n:I}=context.window;
 const unchanged=JSON.stringify(D);
@@ -34,7 +35,7 @@ T.closeModal();ok(get('#modal-root').innerHTML==='','Closing removes the embedde
 ok(JSON.stringify(D)===unchanged,'Visual update must not change training doses or routine');
 const index=fs.readFileSync(path.join(base,'index.html'),'utf8'),sw=fs.readFileSync(path.join(base,'sw.js'),'utf8');
 ok(index.indexOf('videos.js')<index.indexOf('i18n.js'),'Video translations load before translator');
-ok(sw.includes('videos.js?v=1.11.1')&&sw.includes('roundwork-v1.11.1'),'Video catalog cached with current app');
+ok(sw.includes('videos.js?v=1.12.0')&&sw.includes('roundwork-v1.12.0'),'Video catalog cached with current app');
 ok(!sw.includes('youtube.com')&&!sw.includes('youtube-nocookie.com'),'External videos never falsely cached for offline');
 ok(!original.includes('ILLUSTRATED GUIDES'),'Library advertises video guides');
 console.log(`${checks} video checks passed: all ${D.exercises.length} guides, ${D.exercises.length-2} video mappings, variants, Spanish, offline handling, on-demand loading and unchanged training data.`);

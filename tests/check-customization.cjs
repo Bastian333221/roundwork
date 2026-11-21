@@ -1,9 +1,10 @@
+const mockStorage={};
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const base=path.join(__dirname,'..'),noop=()=>{},elements=new Map();let rows=[],checks=0;
 const el=()=>({value:'',checked:false,querySelector:()=>null,addEventListener:noop,classList:{add:noop,remove:noop,toggle:noop},setAttribute:noop,focus:noop,textContent:'',innerHTML:'',hidden:false,style:{}});
 const get=key=>{if(!elements.has(key))elements.set(key,el());return elements.get(key);};
 const document={body:{style:{}},activeElement:el(),getElementById:get,querySelector:get,querySelectorAll:selector=>selector==='[data-actual-row]'?rows:[],addEventListener:noop};
-const ctx={window:{scrollTo:noop,confirm:()=>true},document,localStorage:{getItem:()=>null,setItem:noop},location:{hash:''},history:{replaceState:noop},setInterval:noop,clearInterval:noop,setTimeout:noop,clearTimeout:noop,console,URL,Date,Map,Set,navigator:{}};vm.createContext(ctx);
+const ctx={window:{scrollTo:noop,confirm:()=>true},document,localStorage:{getItem:key=>mockStorage[key]??null,setItem:(key,value)=>mockStorage[key]=value},location:{hash:''},history:{replaceState:noop},setInterval:noop,clearInterval:noop,setTimeout:noop,clearTimeout:noop,console,URL,Date,Map,Set,navigator:{}};vm.createContext(ctx);
 for(const f of ['data.js','es.js','es-ui.js','evidence.js','videos.js','planner.js','planner-ui.js','choices.js','schedule.js','history.js','performance.js','performance-ui.js','customization-ui.js','readiness.js','custom-guides.js'])vm.runInContext(fs.readFileSync(path.join(base,f),'utf8'),ctx);
 const app=fs.readFileSync(path.join(base,'app.js'),'utf8').replace(/  render\(\);\s*\}\)\(\);\s*$/,'  window.test={performanceUI,customizationUI,currentSession,historyMeta,renderLog,renderSession,historyCard,getState:()=>state,setState:s=>{state={...baseState,equipmentChecks:{},schedules:{},recoveryDays:{},logs:{},sessions:{},swaps:{},sessionSettings:{},sessionHistory:{},activeSessions:{},sessionAdditions:{},...s}}};\n})();');vm.runInContext(app,ctx);
 const T=ctx.window.test,P=ctx.window.RoundworkPerformance,H=ctx.window.RoundworkHistory,C=T.customizationUI,U=T.performanceUI,D=ctx.window.BOXING_DATA,ok=(x,label)=>{assert(x,label);checks++;},copy=x=>JSON.parse(JSON.stringify(x)),button=attribute=>({hasAttribute:name=>name===attribute});

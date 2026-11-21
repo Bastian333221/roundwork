@@ -1,0 +1,57 @@
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert'),base=path.join(__dirname,'..');let checks=0;
+const ok=(value,label)=>{assert(value,label);checks++;},noop=()=>{};
+function fixture(protocol='https:'){
+  const nodes=new Map(),events={},saved={},created={},data={sessionHistory:{},activeSessions:{},logs:{},sessions:{},equipmentChecks:{},sessionAdditions:{},readinessChecks:{}};
+  const make=()=>({hidden:false,value:'',textContent:'',innerHTML:'',id:'',dataset:{},open:false,disabled:false,setAttribute:noop,addEventListener:noop,insertBefore:noop,before:noop,focus:noop,reportValidity:()=>true,showModal(){this.open=true;},close(){this.open=false;}});
+  const get=s=>{if(!nodes.has(s))nodes.set(s,make());return nodes.get(s);};
+  const document={hidden:false,querySelector:get,createElement(tag){const e=make();if(tag==='dialog')created.dialog=e;return e;},body:{appendChild:noop},addEventListener(name,fn){(events[name]??=[]).push(fn);}};
+  const localStorage={getItem:k=>saved[k]||null,setItem:(k,v)=>{saved[k]=v;}},calls={create:0,otp:[],verify:[],signout:[],signup:[],password:[]};let callback;
+  const client={auth:{onAuthStateChange(fn){callback=fn;return {data:{subscription:{unsubscribe:noop}}};},async getSession(){return {data:{session:null}};},async signUp(input){calls.signup.push(input);return {data:{session:null,user:{id:'ui-user',email:input.email}},error:null};},async signInWithPassword(input){calls.password.push(input);const session={user:{id:'ui-user',email:input.email}};callback('SIGNED_IN',session);return {data:{session},error:null};},async signInWithOtp(input){calls.otp.push(input);return {error:null};},async verifyOtp(input){calls.verify.push(input);callback('SIGNED_IN',{user:{id:'ui-user',email:input.email}});return {data:{},error:null};},async signOut(input){calls.signout.push(input);callback('SIGNED_OUT',null);return {error:null};}},from(){return {select(){return {eq(){return {async maybeSingle(){return {data:null,error:null};}};}};}};},async rpc(){return {data:{saved:true,revision:1},error:null};}};
+  const window={ROUNDWORK_ES:{},ROUNDWORK_SYNC_CONFIG:{supabaseUrl:'https://test-project.supabase.co',publishableKey:'sb_publishable_test'},RoundworkSupabase:{createClient(){calls.create++;return client;}},RoundworkStore:{getState:()=>data,canApplySync:()=>true,applySync(records){data.sessionHistory=records;return true;}},addEventListener:noop};
+  window.RoundworkI18n={language:'en',translate(text){return this.language==='es'?window.ROUNDWORK_ES[text]||text:text;}};
+  const ctx={window,document,localStorage,navigator:{onLine:true},location:{protocol,href:protocol==='file:'?'file:///C:/Roundwork.html':'https://example.test/roundwork/'},console,Date,URL,Blob,Map,Set,setTimeout:()=>1,clearTimeout:noop,AbortSignal,fetch:()=>{throw Error('No network requests allowed in UI fixture');}};
+  vm.createContext(ctx);
+  for(const file of ['data.js','es.js','es-ui.js','evidence.js','planner.js','planner-ui.js','choices.js','schedule.js','history.js','performance.js','readiness.js','sync-core.js','sync-engine.js','sync-ui.js'])vm.runInContext(fs.readFileSync(path.join(base,file),'utf8'),ctx);
+  return {get,created,calls,ctx,window,saved,data,events,client,auth:(event,session)=>callback(event,session)};
+}
+(async()=>{
+  const f=fixture();await Promise.resolve();await Promise.resolve();
+  ok(f.calls.create===1&&f.window.RoundworkSync.getStatus().phase==='signed-out','Hosted page creates client and initially asks for sign-in');
+  ok(!f.get('#sync-signin').hidden&&f.get('#sync-account').hidden,'Signed-out controls expose email rather than account actions');
+  f.get('#sync-email').value='person@example.test';await f.get('#sync-email-form').onsubmit({preventDefault:noop});
+  ok(f.calls.otp[0].email==='person@example.test'&&f.calls.otp[0].options.emailRedirectTo==='https://example.test/roundwork/','Sign-in email uses entered address and app return URL');
+  ok(!f.get('#sync-code-form').hidden,'Successful email request exposes optional code entry');
+  f.get('#sync-code').value='123456';await f.get('#sync-code-form').onsubmit({preventDefault:noop});
+  ok(f.calls.verify[0].type==='email'&&f.calls.verify[0].token==='123456','Email code verification uses intended email flow');
+  ok(f.window.RoundworkSync.getStatus().phase==='consent'&&f.get('#sync-signin').hidden&&!f.get('#sync-enable').hidden,'Verified identity still requires explicit device connection');
+  f.get('#sync-enable').onclick();ok(!f.window.RoundworkSync.importAllowed()&&f.get('#sync-enable').hidden&&!f.get('#sync-connected').hidden,'Enabling sync connects account and guards replacement import');
+  ok(JSON.parse(f.saved['roundwork.sync-recovery.v1']).app==='roundwork','Pre-sync recovery copy is a compatible backup');
+  await f.get('#sync-now').onclick();ok(f.window.RoundworkSync.getStatus().phase==='synced','Sync-now action reports a verified round-trip');
+  f.window.RoundworkI18n.language='es';for(const fn of f.events['roundwork-language']||[])fn();
+  ok(f.get('#sync-phase').textContent==='Entrenamientos sincronizados','Dynamic synced status is localized');
+  for(const text of f.window.ROUNDWORK_SYNC_TEXT)ok(typeof f.window.ROUNDWORK_ES[text]==='string'&&f.window.ROUNDWORK_ES[text]!==text,'Spanish translation exists: '+text);
+  f.auth('SIGNED_OUT',null);ok(!f.get('#sync-disconnect-local').hidden,'Expired sign-in still permits disconnecting the local sync link');
+  await f.get('#sync-disconnect-local').onclick();ok(f.window.RoundworkSync.importAllowed()&&f.calls.signout.at(-1).scope==='local','Disconnect clears local link and signs out without signing out other devices');
+
+  const passwordUser=fixture();await Promise.resolve();await Promise.resolve();
+  passwordUser.get('#sync-email').value='person@example.test';passwordUser.get('#sync-password').value='short';
+  await passwordUser.get('#sync-account-create').onclick();ok(passwordUser.calls.signup.length===0,'New account rejects a password below the app minimum');
+  passwordUser.get('#sync-password').value='Synthetic-password-2049';
+  await passwordUser.get('#sync-account-create').onclick();
+  ok(passwordUser.calls.signup.length===1&&passwordUser.calls.signup[0].options.emailRedirectTo==='https://example.test/roundwork/','Account creation uses app verification return URL');
+  ok(passwordUser.window.RoundworkSync.getStatus().phase==='signed-out'&&passwordUser.get('#sync-auth-message').textContent.includes('confirm'),'Account needing email confirmation is not treated as signed in');
+  ok(passwordUser.get('#sync-password').value==='','Account creation clears the password field');
+  passwordUser.get('#sync-password').value='Synthetic-password-2049';await passwordUser.get('#sync-password-form').onsubmit({preventDefault:noop});
+  ok(passwordUser.calls.password[0].email==='person@example.test'&&passwordUser.window.RoundworkSync.getStatus().phase==='consent','Password sign-in verifies identity before explicit sync consent');
+  ok(passwordUser.get('#sync-password').value==='','Successful password sign-in clears password field');
+  passwordUser.get('#sync-enable').onclick();ok(!JSON.stringify(passwordUser.saved).includes('Synthetic-password-2049'),'Workout storage, sync baseline and recovery backup do not store the password');
+  const unconfirmed=fixture();await Promise.resolve();await Promise.resolve();unconfirmed.get('#sync-email').value='person@example.test';unconfirmed.get('#sync-password').value='Synthetic-password-2049';
+  unconfirmed.client.auth.signInWithPassword=async()=>({error:{code:'email_not_confirmed'}});
+  await unconfirmed.get('#sync-password-form').onsubmit({preventDefault:noop});ok(unconfirmed.get('#sync-auth-message').textContent.includes('Confirm your email')&&unconfirmed.window.RoundworkSync.getStatus().phase==='signed-out','Unconfirmed email cannot enable account sync');
+  unconfirmed.client.auth.signInWithPassword=async()=>({error:{code:'invalid_credentials'}});
+  await unconfirmed.get('#sync-password-form').onsubmit({preventDefault:noop});ok(unconfirmed.get('#sync-auth-message').textContent.includes('could not be verified'),'Incorrect credentials show a recoverable sign-in error');
+  const file=fixture('file:');await Promise.resolve();
+  ok(file.calls.create===0&&file.window.RoundworkSync.getStatus().phase==='local-file','Downloaded HTML does not attempt unsupported file-based authentication');
+  ok(file.get('#sync-signin').hidden&&!file.get('#sync-local-file').hidden,'Downloaded guide directs sync users to hosted app');
+  console.log(checks+' sync UI checks passed: email/password and code, verification, consent, recovery, sync status, Spanish, disconnect and downloaded guide behavior.');
+})().catch(error=>{console.error(error);process.exitCode=1;});
