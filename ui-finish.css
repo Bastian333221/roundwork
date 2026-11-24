@@ -1,0 +1,317 @@
+/* ROUNDWORK 1.12.2: shared visual finishing. Existing DOM and behavior are retained. */
+:root {
+  --muted:#52604f;
+  --control-line:#7a856e;
+  --focus:#a92e10;
+  --action:#bb3412;
+  --touch-size:44px;
+  --text-body:16px;
+  --text-small:14px;
+  --text-meta:12px;
+}
+html {scroll-padding-block:24px;scrollbar-color:#88927d var(--bg)}
+body {line-height:1.55}
+::selection {background:var(--lime);color:var(--ink)}
+input,textarea {caret-color:var(--action)}
+button,a,input,select,textarea {touch-action:manipulation}
+:where(button,a,input,select,textarea,summary):focus-visible {
+  outline:3px solid var(--focus);outline-offset:3px;
+}
+button:disabled {opacity:.65}
+.app-shell {padding-inline:clamp(20px,4vw,54px)}
+.site-header {gap:14px;padding-block:24px}
+.brand {letter-spacing:-.03em}
+.brand small {font-size:9px;letter-spacing:.12em}
+.header-note {font-size:11px;letter-spacing:.09em}
+.language-switch {margin-left:0}
+.language-switch button[aria-pressed="true"] {background:var(--ink);color:var(--surface)}
+.site-header .button-small,.language-switch button {font-size:14px;min-height:44px}
+.icon-button {min-width:44px;min-height:44px;width:44px;height:44px}
+.main-nav {gap:24px;margin-bottom:16px}
+.nav-button {font-size:14px;min-height:52px;padding:14px 2px 12px}
+.nav-symbol {display:none}
+.nav-badge {font-size:11px;min-width:20px;text-align:center}
+.sync-strip {gap:6px 20px;padding-block:8px;margin-bottom:24px}
+.sync-strip .text-button,#sync-strip-status {font-size:14px}
+.page-intro {gap:24px;margin-bottom:26px}
+.page-title {letter-spacing:-.035em;line-height:1.05}
+.page-description {font-size:16px;line-height:1.65;max-width:70ch}
+.page-kicker,.eyebrow {font-size:11px;letter-spacing:.12em;line-height:1.5}
+.week-selector-wrap {min-width:210px}
+.form-label {font-size:12px;letter-spacing:.06em;line-height:1.5}
+.button,.button-small {min-height:44px;font-size:14px;line-height:1.45;padding:11px 16px}
+.button-primary {background:var(--action);border-color:var(--action)}
+.button-primary:hover {background:#982909;border-color:#982909}
+.button-dark:hover {background:#2b3f2e;border-color:#2b3f2e}
+.button-ghost:hover {background:#e8ecdf}
+.text-button {font-size:14px;line-height:1.5;min-height:44px;padding-block:10px;text-align:start}
+.text-button:hover {color:#8f290e;text-decoration-thickness:2px}
+.hero {padding:28px;min-height:236px}
+.hero h2 {letter-spacing:-.025em;line-height:1.15;max-width:80%}
+.hero p {font-size:14px;line-height:1.65;max-width:76%;color:#d2dacd}
+.hero-stats {font-size:12px;line-height:1.5;gap:14px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.day-tabs {gap:8px;padding:4px 2px 8px;margin-block:16px}
+.day-tab {font-size:13px;min-width:72px;min-height:80px;padding:12px 8px;line-height:1.4}
+.day-tab small,html[lang="es"] .day-tab small {font-size:10px;letter-spacing:.02em}
+.day-tab .day-routine {font-size:12px;line-height:1.4}
+.day-tab.active {background:var(--action);border-color:var(--action)}
+.schedule-status p,.schedule-current,.session-day-note {font-size:14px;line-height:1.7}
+.schedule-status-top {align-items:center}
+.notice,.notice strong {font-size:14px;line-height:1.65}
+.notice {padding:16px 18px;align-items:center}
+.notice .text-button {font-size:14px}
+.section-heading {align-items:center;flex-wrap:wrap}
+.section-heading h2 {font-size:22px;letter-spacing:-.02em}
+.section-heading h3 {font-size:20px}
+.section-heading>span {font-size:12px;line-height:1.5}
+.readiness-panel,.sidebar-panel,.session-options {padding:24px}
+.readiness-panel h3,.sidebar-panel h3 {font-size:22px;line-height:1.25;letter-spacing:-.025em}
+.readiness-panel p,.sidebar-panel p,.session-options p,.adaptation-notes li {font-size:14px;line-height:1.7}
+.readiness-options {gap:10px}
+.readiness-button {min-height:48px;padding:12px 10px;font-size:14px;line-height:1.4}
+.panel-select,.search-input,.filter-select,.actual-number,.notes-field,.week-selector {
+  font-size:16px;line-height:1.5;min-height:48px;border-color:var(--control-line);max-width:100%;
+}
+.panel-select {padding:12px}
+.session-options .panel-select,.card-movement .panel-select {font-size:16px}
+.session-options .form-label {font-size:12px}
+.session-option-grid {gap:18px}
+.progression-choice,.readiness-fields label,.readiness-concern {font-size:14px;line-height:1.65;min-height:44px;align-items:center}
+.progression-choice input,.readiness-fields input,.readiness-concern input {width:24px;height:24px}
+.warmup-feedback {padding:18px;margin-block:16px}
+.warmup-feedback>strong,.warmup-feedback .readiness-adjustments h3 {font-size:16px}
+.warmup-feedback p,.warmup-feedback li,.readiness-adjustments li {font-size:14px;line-height:1.65}
+.balance-key {font-size:13px;line-height:1.5}
+.exercise-list {gap:18px;margin-top:20px}
+.exercise-card {padding:24px;border-radius:14px}
+.card-top {gap:14px}
+.exercise-number {font-size:12px;padding-top:6px}
+.category-tag {font-size:11px;letter-spacing:.08em;padding:5px 8px}
+.exercise-name {font-size:23px;line-height:1.25;letter-spacing:-.025em;overflow-wrap:anywhere}
+.exercise-purpose {font-size:15px;line-height:1.65;margin-top:9px}
+.equipment-line,.equipment-chip {font-size:12px;line-height:1.5}
+.equipment-chip {padding:5px 8px}
+.completion-control {font-size:14px;min-height:48px;padding:8px 10px;gap:8px}
+.completion-control input,.equipment-confirmation input,.equipment-check-item input {width:24px;height:24px}
+.equipment-confirmation {padding:14px;gap:12px}
+.equipment-confirmation strong {font-size:15px}
+.equipment-confirmation small,.equipment-check-items p {font-size:13px;line-height:1.6}
+.equipment-checklist summary,.equipment-check-item {font-size:14px;min-height:48px;line-height:1.5}
+.equipment-checklist summary {padding:14px}
+.equipment-check-items {padding:0 14px 12px}
+.dose-row {gap:24px;margin:20px 0 0;padding-top:18px;font-variant-numeric:tabular-nums}
+.dose {font-size:14px}
+.dose strong {font-size:20px;line-height:1.4}
+.dose small {font-size:11px;letter-spacing:.06em;line-height:1.5}
+.exercise-note {font-size:14px;line-height:1.7;margin:16px 0 0;padding:13px 15px}
+.card-actions {gap:12px 16px;margin-top:20px;align-items:center}
+.card-actions .text-button,.card-actions .button {font-size:14px;min-height:44px}
+.card-movement {flex-basis:100%;max-width:none;margin-right:0}
+.card-movement .form-label {font-size:12px}
+.movement-choice-meta,.actual-empty {font-size:14px;line-height:1.65}
+.complete-session {padding-top:22px;gap:16px}
+.complete-session p,.routine-history p,.routine-history summary,.routine-history li {font-size:14px;line-height:1.65}
+.routine-history h3 {font-size:20px}
+.day-plan-menu {width:340px;padding:10px;border-color:var(--control-line);box-shadow:0 12px 30px #19251d24}
+.day-plan-menu>p {font-size:13px;line-height:1.6}
+.day-plan-option {font-size:15px;min-height:52px;line-height:1.45;padding:12px}
+.day-plan-option small {font-size:12px;line-height:1.5}
+.schedule-warning,.custom-exercise-card,.evidence-intro {border-left:1px solid var(--line)}
+.history-summary {gap:16px}
+.history-summary span,.history-count span {font-size:14px;line-height:1.55}
+.history-card {padding:26px;border-radius:14px}
+.history-card p,.history-settings,.history-dose {font-size:14px;line-height:1.7}
+.history-card h2 {font-size:24px;line-height:1.25;letter-spacing:-.025em}
+.history-detail summary,.history-exercise-title {font-size:16px;line-height:1.6;min-height:44px}
+.history-dose dt,.history-session-settings dt {font-size:12px}
+.history-session-settings p {font-size:14px;line-height:1.65}
+.pill {font-size:12px;line-height:1.5;white-space:normal}
+.actual-summary {font-size:14px;line-height:1.65}
+.actual-options label>span,.actual-table-head {font-size:14px;line-height:1.5}
+.actual-table {font-variant-numeric:tabular-nums}
+.actual-row {grid-template-columns:32px minmax(0,1fr) minmax(0,1fr) 44px;gap:12px}
+.actual-row .icon-button {width:44px;height:44px}
+.log-management p,.deleted-sessions p,.logged-settings-fields p {font-size:14px;line-height:1.7}
+.modal-backdrop {padding:24px}
+.modal {max-height:92dvh;border-radius:16px;background:var(--surface)}
+.modal.actual-editor,.modal.manual-session {max-width:760px}
+.modal-header {padding:24px;gap:20px}
+.modal-header h2 {font-size:28px;line-height:1.2;letter-spacing:-.025em;overflow-wrap:anywhere}
+.modal .modal-header .eyebrow {font-size:11px}
+.modal-content {padding:0 24px 28px;font-size:16px;line-height:1.65}
+.modal-content>p,.guide-purpose,.guide-section p,.guide-section li,.guide-details li,.guide-footer p {font-size:15px;line-height:1.75}
+.modal-content label.form-label {font-size:12px;margin-block-start:18px}
+.modal-tools {gap:12px}
+.modal .modal-language button {font-size:12px;min-width:44px;min-height:44px}
+.demo-controls {flex-wrap:wrap;gap:8px}
+.demo-controls .button,.movement-preview .demo-controls .button,.movement-backup .demo-controls .button {font-size:13px;min-width:44px;min-height:44px}
+.movement-preview>p,.movement-preview h3,.video-note,.video-connectivity,.video-placeholder p,.video-details>summary,.movement-backup>summary {font-size:14px;line-height:1.65}
+.video-actions .button {font-size:14px}
+.guide-section h3 {font-size:20px;line-height:1.3}
+.phone-dialog {border-radius:16px;background:var(--surface);max-height:92dvh}
+.phone-dialog .modal-header {background:var(--surface);padding:22px}
+.phone-dialog .modal-content {padding:0 22px 24px}
+.sync-dialog .modal-content {padding:20px 24px 26px}
+.sync-dialog input {font-size:16px;border-color:var(--control-line)}
+.sync-dialog .button,.sync-dialog .text-button {min-height:48px}
+.auth-recovery-help summary {padding-block:10px;line-height:1.5}
+.library-body h3 {font-size:21px;line-height:1.3;letter-spacing:-.02em}
+.library-body p {font-size:14px;line-height:1.65}
+.library-bottom>span {font-size:13px;line-height:1.6}
+.library-art .category-tag {font-size:11px}
+.gym-topline,.equipment-item strong {font-size:15px;line-height:1.6}
+.segment {min-width:48px;min-height:44px;font-size:14px}
+.gym-notes label,.empty-state {font-size:15px;line-height:1.7}
+.week-card p,.review-item,.progression-card p,.source-item p,.source-item strong {font-size:15px;line-height:1.75}
+.progression-card h3 {font-size:19px}
+.evidence-intro p,.evidence-block p,.evidence-card p,.evidence-card dd {font-size:15px;line-height:1.75}
+.evidence-card dt,.evidence-card .evidence-citation,.evidence-doi,.evidence-publication p,.evidence-publication summary {font-size:13px!important;line-height:1.65}
+.evidence-links a {font-size:14px;line-height:1.7}
+.evidence-card h3 {font-size:24px;line-height:1.3}
+.evidence-block h3 {font-size:21px}
+.site-footer {font-size:12px;letter-spacing:.03em;line-height:1.7}
+.timer-dock {max-width:calc(100vw - 24px);gap:12px;padding:14px 16px}
+.timer-dock .button,.timer-dock .icon-button {min-height:44px}
+#timer-display {font-variant-numeric:tabular-nums}
+.toast {max-width:min(520px,calc(100vw - 32px));font-size:15px;line-height:1.6;padding:16px 20px}
+@media(max-width:1100px) {.header-note {display:none}.session-layout {grid-template-columns:minmax(0,1fr) 250px}}
+@media(max-width:780px) {
+  .session-layout {grid-template-columns:minmax(0,1fr)}
+  .session-sidebar {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .page-title {font-size:44px}
+  .site-header {gap:12px}
+  .hero h2 {font-size:34px}
+}
+@media(max-width:600px) {
+  .app-shell {padding-inline:18px}
+  .site-header {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;gap:10px;padding-block:18px}
+  .brand {grid-column:1/3;grid-row:1;font-size:23px;margin:0}
+  .brand-mark {width:36px;height:38px;font-size:31px}
+  .brand small {font-size:8px}
+  .site-header #help-button {grid-column:3;grid-row:1}
+  .site-header .language-switch {grid-column:1/-1;grid-row:2;width:100%;order:unset;margin:0}
+  .site-header .language-switch button {flex:1;font-size:14px;min-height:44px}
+  .site-header #phone-help {grid-column:1;grid-row:3;margin:0;min-height:48px;font-size:13px;padding:10px;line-height:1.4}
+  .site-header #sync-open {grid-column:2/4;grid-row:3;font-size:13px;min-height:48px;padding:10px;line-height:1.4}
+  .main-nav {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-bottom:12px;padding-block:8px;align-items:stretch}
+  .nav-button,html[lang="es"] .nav-button {font-size:14px;min-height:44px;padding:9px 4px;justify-content:center;border-radius:6px 6px 0 0;gap:5px;line-height:1.35}
+  .nav-button.active {background:#e5eadb}
+  .nav-badge {font-size:10px}
+  .sync-strip {margin-bottom:22px;padding-block:6px;align-items:flex-start;flex-direction:row}
+  .sync-strip .text-button,#sync-strip-status {font-size:13px}
+  .page-intro {display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+  .page-title {font-size:36px;line-height:1.08;letter-spacing:-.03em;margin-bottom:14px}
+  .page-description {font-size:15px}
+  .page-kicker {font-size:11px;letter-spacing:.08em}
+  .week-selector-wrap {min-width:0;max-width:none;width:100%;margin:0}
+  .week-selector-wrap .form-label {font-size:12px;letter-spacing:.06em}
+  .hero {padding:22px;min-height:230px}
+  .hero h2,html[lang="es"] .hero h2 {font-size:30px;max-width:85%;line-height:1.18;letter-spacing:-.02em}
+  .hero .eyebrow {font-size:11px;letter-spacing:.08em}
+  .hero p {font-size:14px;max-width:85%}
+  .hero-stats,html[lang="es"] .hero-stats {font-size:11px;gap:10px}
+  .hero-stats>span+span {padding-left:10px}
+  .day-tabs .day-tab {flex:0 0 94px;min-width:94px;min-height:86px;padding:12px 7px;font-size:14px}
+  .day-tabs {scrollbar-color:var(--control-line) var(--bg);scrollbar-width:thin}
+  .day-tab small,html[lang="es"] .day-tab small {font-size:11px}
+  .notice {padding:16px;align-items:flex-start;flex-wrap:wrap;gap:4px 12px}
+  .notice,.notice strong,.notice .text-button {font-size:14px}
+  .readiness-panel,.sidebar-panel,.session-options {padding:20px}
+  .readiness-panel {display:block}
+  .readiness-panel h3,.sidebar-panel h3 {font-size:22px}
+  .readiness-panel p,.sidebar-panel p,.readiness-button {font-size:14px}
+  .form-label {font-size:12px}
+  .session-option-grid {grid-template-columns:minmax(0,1fr);gap:16px}
+  .section-heading h2 {font-size:22px}
+  .exercise-card {padding:20px 16px}
+  .card-top {gap:10px;position:relative;display:grid;grid-template-columns:22px minmax(0,1fr)}
+  .exercise-number {font-size:12px;min-width:0}
+  .exercise-main {min-width:0}
+  .card-top>.completion-control {grid-column:2;justify-self:end;margin-top:4px}
+  .exercise-name {font-size:22px;line-height:1.3}
+  .exercise-purpose {font-size:15px}
+  .completion-control {font-size:14px;gap:8px;padding:8px 10px}
+  .dose-row,html[lang="es"] .dose-row {margin-left:0;gap:16px 22px}
+  .dose strong {font-size:19px}
+  .exercise-note {margin-left:0;font-size:14px}
+  .card-actions {gap:12px;align-items:stretch}
+  .card-actions .button,.card-actions .text-button {font-size:14px;padding:10px 12px}
+  .card-actions>.text-button {flex:1 1 auto;text-align:center;border:1px solid var(--line);border-radius:8px}
+  .card-actions>.button {flex:1 1 100%}
+  .card-movement {flex:1 1 100%;width:100%;max-width:none}
+  .complete-session {align-items:stretch;flex-direction:column}
+  .complete-session .button {font-size:14px;width:100%}
+  .actual-options {grid-template-columns:minmax(0,1fr);gap:14px}
+  .actual-row {grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 44px;gap:8px}
+  .actual-row .icon-button {width:44px;height:44px}
+  .history-summary {gap:8px}
+  .history-summary>div {padding:16px 10px}
+  .history-summary strong {font-size:26px}
+  .history-summary span,.history-count span {font-size:12px}
+  .history-card {padding:20px 16px}
+  .history-card h2 {font-size:22px}
+  .history-card-head {gap:12px}
+  .history-count {max-width:90px}
+  .history-actions {gap:10px}
+  .history-actions .button {flex:1 1 100%}
+  .history-session-settings dd {font-size:19px}
+  .session-sidebar,.library-grid {grid-template-columns:minmax(0,1fr)}
+  .sidebar-panel {margin-bottom:0}
+  .library-art {height:180px}
+  .library-body h3 {font-size:22px}
+  .library-body p {font-size:15px}
+  .library-bottom .button {font-size:14px;min-height:44px}
+  .library-controls {display:grid;grid-template-columns:minmax(0,1fr)}
+  .search-input,.filter-select {min-width:0;max-width:none;width:100%;font-size:16px}
+  .equipment-item {gap:12px;flex-wrap:wrap}
+  .equipment-item strong {font-size:15px;flex:1 1 100%}
+  .segmented {width:100%}
+  .segment {flex:1;min-width:48px;font-size:14px}
+  .modal-backdrop {padding:0}
+  .modal {max-height:94dvh;border-radius:16px 16px 0 0;width:100%}
+  .modal-header {padding:22px 18px 18px;gap:14px}
+  .modal-header h2 {font-size:25px;line-height:1.25}
+  .modal-content {padding:0 18px 24px}
+  .modal-content label.form-label {font-size:12px}
+  .guide-layout {grid-template-columns:minmax(0,1fr)}
+  .guide-details {gap:18px}
+  .guide-details li {font-size:15px}
+  .guide-footer {gap:14px}
+  .sync-dialog .modal-content,.phone-dialog .modal-content {padding:18px}
+  .phone-dialog .modal-header {padding:18px}
+  .sync-dialog .modal-header h2 {font-size:25px}
+  .sync-actions {align-items:stretch}
+  .sync-actions>.button {flex:1 1 100%}
+  .timer-dock {bottom:max(12px,env(safe-area-inset-bottom));padding:12px;gap:8px}
+  .timer-dock .button {padding-inline:12px;font-size:13px}
+  .timer-info strong {font-size:28px}
+  .site-footer {font-size:12px;line-height:1.7;padding-block:22px}
+}
+@media(prefers-reduced-motion:no-preference) {
+  .button,.nav-button,.day-tab,.segment {transition:background-color .16s ease-out,border-color .16s ease-out,color .16s ease-out}
+}
+/* Final responsive and contrast corrections from the rendered review. */
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,
+.language-switch button:focus-visible,.sync-dialog input:focus-visible,.video-details>summary:focus-visible {
+  outline:3px solid var(--focus);outline-offset:3px;
+}
+input::placeholder,textarea::placeholder {color:var(--muted);opacity:1}
+.brand small,.timer-info span,.day-tab small,html[lang="es"] .day-tab small {font-size:11px}
+.nav-badge {font-size:11px}
+.week-card.dark .pill {color:var(--ink)}
+.week-card.dark .eyebrow {color:var(--lime)}
+.day-plan-menu {width:min(340px,calc(100vw - 32px));max-height:calc(100dvh - 16px);overflow-y:auto}
+@media(min-width:601px) and (max-width:1100px) {
+  .site-header {display:grid;grid-template-columns:minmax(220px,1fr) auto 44px;gap:12px 18px}
+  .site-header .brand {grid-column:1;grid-row:1}
+  .site-header .language-switch {grid-column:2;grid-row:1;justify-self:end}
+  .site-header #help-button {grid-column:3;grid-row:1}
+  .site-header #phone-help {grid-column:1;grid-row:2;justify-self:start}
+  .site-header #sync-open {grid-column:2/4;grid-row:2;justify-self:end}
+}
+@media(max-width:380px) {
+  .page-title {font-size:29px;letter-spacing:-.025em}
+  .brand {font-size:21px;gap:8px}
+  .brand small {font-size:11px;letter-spacing:.03em}
+}
+

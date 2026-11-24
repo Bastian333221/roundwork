@@ -1,8 +1,12 @@
-# ROUNDWORK 1.12.1
+# ROUNDWORK 1.12.2
 
 An English/Spanish boxing gym companion for Android, iPhone and desktop browsers. The boxing-focused gym weeks adapt to level, time, equipment and recovery. The established lifting-week routine is unchanged.
 
 App: https://bastian333221.github.io/roundwork/
+
+## Interface finishing in 1.12.2
+
+A presentation-only finishing layer improves phone/tablet navigation, readable exercise and log controls, form sizing, focus indicators, selected contrast pairs and English/Spanish wrapping. Workout, history and sync controllers are retained. The new stylesheet is cached for offline use and bundled in the downloadable guide. Browser viewport review does not replace physical-phone or full accessibility testing.
 
 ## Automatic workout-log sync
 
